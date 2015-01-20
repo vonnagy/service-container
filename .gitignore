@@ -1,0 +1,20 @@
+*.class
+*.log
+.DS_Store
+*.pyc
+.history
+
+# sbt specific
+dist/*
+target/
+project/build
+project/.idea
+project/target
+
+# Scala-IDE specific
+.scala_dependencies
+
+# IntelliJ IDEA project files
+.idea
+.idea_modules
+*.iml

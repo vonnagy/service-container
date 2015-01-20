@@ -1,0 +1,12 @@
+language: scala
+scala:
+- 2.10.4
+script: sbt clean coverage test
+jdk:
+- oraclejdk7
+- openjdk7
+notifications:
+  email:
+    recipients:
+    - ivan@vonnagy.net
+after_success: "sbt coveralls"
