@@ -22,9 +22,15 @@ class ServicesManagerSpec extends Specification {
       """).withFallback(ConfigFactory.load()))
 
   val probe = TestProbe()
-  val act = TestActorRef[ServicesManager](ServicesManager.props(Nil, Nil), "service")
+  lazy val act = TestActorRef[ServicesManager](ServicesManager.props(Nil, Nil), "service")
 
   "The ServicesManager" should {
+
+    "be able to get a degraded health state before the Http service is running" in {
+      probe.send(act, GetHealth)
+      val msg = probe.expectMsgType[HealthInfo]
+      msg.state must be equalTo (HealthState.DEGRADED)
+    }
 
     "be able to start an Http service on a specified port" in {
       probe.send(act, StatusRunning)
