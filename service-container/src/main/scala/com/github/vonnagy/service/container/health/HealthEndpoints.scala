@@ -7,7 +7,7 @@ import com.github.vonnagy.service.container.http.routing.{PerRequestHandler, Res
 import org.joda.time.DateTime
 import spray.http.MediaTypes
 import spray.http.StatusCodes._
-
+import akka.japi.Util.immutableSeq
 import scala.util.{Failure, Success}
 
 // Message class for requesting the system's health
@@ -20,11 +20,11 @@ class HealthEndpoints(implicit system: ActorSystem,
                       actorRefFactory: ActorRefFactory)
   extends RoutedEndpoints with CIDRDirectives {
 
-  implicit val config = system.settings.config.getConfig("container.http")
+  lazy val config = system.settings.config.getConfig("container.http")
 
   val route = {
     pathPrefix("health") {
-      cidrFilter {
+      cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
         get {
           pathEnd {
             acceptableMediaTypes(MediaTypes.`application/json`) {

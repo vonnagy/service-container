@@ -1,6 +1,7 @@
 package com.github.vonnagy.service.container.metrics
 
 import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.japi.Util._
 import com.github.vonnagy.service.container.http.DefaultMarshallers
 import com.github.vonnagy.service.container.http.directives.CIDRDirectives
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
@@ -11,13 +12,12 @@ class MetricsEndpoints(implicit system: ActorSystem,
   extends RoutedEndpoints with CIDRDirectives {
 
   implicit def marsh = DefaultMarshallers.jsonMarshaller
-  implicit val config = system.settings.config.getConfig("container.http")
-
   lazy val writer = new MetricsWriter(Metrics(system).metricRegistry)
+  lazy val config = system.settings.config.getConfig("container.http")
 
   val route =
     path("metrics") {
-      cidrFilter {
+      cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
         get {
           acceptableMediaTypes(MediaTypes.`application/json`) {
             compressResponseIfRequested() {

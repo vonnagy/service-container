@@ -40,11 +40,3 @@ abstract class ScheduledReporter {
   def report(): Unit
 
 }
-
-object ScheduledReporter {
-  //TODO
-  //  def apply(metricReporters: Seq[Class[_ <: ScheduledReporter]]): ScheduledReporter = {
-  //
-  //  }
-
-}

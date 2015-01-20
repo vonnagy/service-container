@@ -1,6 +1,7 @@
 package com.github.vonnagy.service.container.http
 
 import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.japi.Util._
 import com.github.vonnagy.service.container.http.directives.CIDRDirectives
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import org.joda.time.{DateTime, DateTimeZone}
@@ -11,7 +12,7 @@ class BaseEndpoints(implicit system: ActorSystem,
                     actorRefFactory: ActorRefFactory)
   extends RoutedEndpoints with CIDRDirectives {
 
-  implicit val config = system.settings.config.getConfig("container.http")
+  lazy val config = system.settings.config.getConfig("container.http")
 
   val route = {
     get {
@@ -26,7 +27,7 @@ class BaseEndpoints(implicit system: ActorSystem,
     } ~
       post {
         path("shutdown") {
-          cidrFilter {
+          cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
             respondPlain { ctx =>
               ctx.complete("The system is being shutdown: ".concat(new DateTime(System.currentTimeMillis(), DateTimeZone.UTC).toString))
               sys.exit(0)

@@ -15,22 +15,20 @@ import spray.routing.Directive0
 
 trait CIDRDirectives extends BaseDirectives {
 
-  // The config at 'container.http'
-  implicit val config: Config
-  private lazy val allow = immutableSeq(config.getStringList("cidr.allow")) map (x => new CIDRUtils(x.trim))
-  private lazy val deny = immutableSeq(config.getStringList("cidr.deny")) map (x => new CIDRUtils(x.trim))
+  def cidrFilter(allow: Seq[String], deny: Seq[String]): Directive0 = {
+    lazy val allowed = allow map (x => new CIDRUtils(x.trim))
+    lazy val denied = deny map (x => new CIDRUtils(x.trim))
 
-  def cidrFilter: Directive0 = {
     (optionalHeaderValuePF {
       case `Remote-Address`(ip) => ip
     }) flatMap {
       case Some(ip) if ip.toOption.isDefined =>
         // Deny trumps allow
 
-        deny.count(_.isInRange(ip.toOption.get.getHostAddress)) match {
+        denied.count(_.isInRange(ip.toOption.get.getHostAddress)) match {
           case 0 if allow.length > 0 =>
             // No denies, but we must match against allows
-            allow.count(_.isInRange(ip.toOption.get.getHostAddress)) match {
+            allowed.count(_.isInRange(ip.toOption.get.getHostAddress)) match {
               case 0 =>
                 // Not explicitly denied, but no allow matches
                 complete(StatusCodes.NotFound)
