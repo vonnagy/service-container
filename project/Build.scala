@@ -61,7 +61,7 @@ object Build extends sbt.Build {
     name := "service-container-examples",
     libraryDependencies ++= Seq(
       "com.sclasen" %% "akka-kafka" % "0.0.10")
-  )
+  ) ++ Test.settings
 
   val metricsReportingSettings = Seq(
     name := "service-container-metrics-reporting",

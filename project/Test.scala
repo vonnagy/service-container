@@ -17,9 +17,10 @@ object Test {
     (test in sbt.Test) <<= (test in sbt.Test) dependsOn testScalastyle,
 
     // Include the code coverage settings
-    ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := "edazdarevic",
+    ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := "<empty>;edazdarevic.*",
     ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 70,
     ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true,
+    ScoverageSbtPlugin.ScoverageKeys.coverageAggregate := true,
 
     ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := {
       if (scalaBinaryVersion.value == "2.10") false
