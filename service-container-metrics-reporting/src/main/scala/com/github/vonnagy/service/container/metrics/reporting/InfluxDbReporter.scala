@@ -3,20 +3,23 @@ package com.github.vonnagy.service.container.metrics.reporting
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import com.github.jjagged.metrics.reporting.statsd.StatsD
 import com.github.vonnagy.service.container.log.LoggingAdapter
 import com.typesafe.config.Config
+import metrics_influxdb.{Influxdb, InfluxdbReporter}
 
 /**
  * Created by Ivan von Nagy on 1/21/15.
  */
-class StatsDReporter(implicit val system: ActorSystem, val config: Config) extends ScheduledReporter with LoggingAdapter {
+class InfluxDbReporter(implicit val system: ActorSystem, val config: Config) extends ScheduledReporter with LoggingAdapter {
 
   private lazy val reporter = getReporter
-  private lazy val statsD = getStatsD
+  private lazy val influxDb = getInfluxDb
 
-  private val statsdHost = config.getString("host")
+  private val influxdbHost = config.getString("host")
   private val port = config.getInt("port")
+  private val database = config.getString("database")
+  private val user = config.getString("user")
+  private val password = config.getString("password")
   private val prefix = config.getString("metric-prefix")
 
   /**
@@ -24,8 +27,8 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
    */
   override def stop: Unit = {
     super.stop
-    if (statsD != null)
-      statsD.close()
+    if (influxDb != null)
+      influxDb
   }
 
   /**
@@ -41,20 +44,19 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
       metrics.metricRegistry.getTimers())
   }
 
-  private[reporting] def getReporter: com.github.jjagged.metrics.reporting.StatsDReporter = {
+  private[reporting] def getReporter: metrics_influxdb.InfluxdbReporter = {
 
-    log.info("Initializing the StatsD metrics reporter");
-
-    com.github.jjagged.metrics.reporting.StatsDReporter.forRegistry(metrics.metricRegistry)
-      .prefixedWith(this.prefix)
-      .withTags("{'host':'" + host + "', 'application':'" + application.replace(' ', '-').toLowerCase() + "'}")
-      .convertDurationsTo(TimeUnit.MILLISECONDS)
+    log.info("Initializing the InfluxDb metrics reporter");
+    InfluxdbReporter
+      .forRegistry(metrics.metricRegistry)
+      .prefixedWith(prefix)
       .convertRatesTo(TimeUnit.SECONDS)
-      .build(statsD);
-
+      .convertDurationsTo(TimeUnit.MILLISECONDS)
+      .build(influxDb)
   }
 
-  private[reporting] def getStatsD: StatsD = {
-    new StatsD(statsdHost, port);
+  private[reporting] def getInfluxDb: Influxdb = {
+    new Influxdb(influxdbHost, port, database, user, password, TimeUnit.MILLISECONDS)
   }
+
 }

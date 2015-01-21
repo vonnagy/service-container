@@ -9,12 +9,9 @@ object Build extends sbt.Build {
   val CODAHALE_VERSION = "3.0.2"
   val LIFT_VERSION = "2.5.1"
 
-  lazy val GeneralSettings = Seq[Def.Setting[_]](
+  lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
 
     compile <<= (compile in Compile) dependsOn (compile in sbt.Test),
-
-    /* basic project info */
-    name := "service-container",
 
     organization := "com.github.vonnagy",
 
@@ -28,7 +25,7 @@ object Build extends sbt.Build {
 
     javacOptions ++= Seq("-source", "1.7", "-target", "1.7"),
 
-    logLevel := Level.Debug,
+    logLevel := Level.Info,
 
     libraryDependencies ++= {
       Seq(
@@ -58,16 +55,19 @@ object Build extends sbt.Build {
   )
 
   // Join the settings together
-  val ServiceContainerSettings = GeneralSettings ++ Publish.settings ++ Test.settings
+  val standardSettings = commonSettings ++ Publish.settings ++ Test.settings
 
-  val ExampleSettings = GeneralSettings ++ Seq(
+  val exampleSettings = Seq(
+    name := "service-container-examples",
     libraryDependencies ++= Seq(
       "com.sclasen" %% "akka-kafka" % "0.0.10")
   )
 
-  val MetricsReportingSettings = GeneralSettings ++ Seq(
+  val metricsReportingSettings = Seq(
+    name := "service-container-metrics-reporting",
     libraryDependencies ++= Seq(
-      "com.github.jjagged" % "metrics-statsd" % "1.0.0")
+      "com.github.jjagged" % "metrics-statsd" % "1.0.0",
+      "com.novaquark" % "metrics-influxdb" % "0.3.0")
    )
 
   val noPublishing = Seq(
@@ -78,22 +78,24 @@ object Build extends sbt.Build {
     publishTo := None
   )
 
-  lazy val BaseProject = Project(id="base", base=file("."))
+  lazy val root = Project(id="root", base=file("."))
     .settings(noPublishing:_*)
-    .dependsOn(ServiceContainerProject)
-    .aggregate(ServiceContainerProject, ServiceContainerMetricsReportingProject, ServiceContainerExamplesProject)
+    .aggregate(core, metricsReporting, examples)
 
-  lazy val ServiceContainerProject: Project = Project(id = "service-container", base = file("service-container"))
-    .settings(ServiceContainerSettings: _*)
+  lazy val core = Project(id = "service-container", base = file("service-container"))
+    .settings(standardSettings: _*)
+    .settings(name := "service-container")
 
-  lazy val ServiceContainerMetricsReportingProject: Project = Project(id = "service-container-metrics-reporting", base = file("service-container-metrics-reporting"))
-    .settings(MetricsReportingSettings:_*)
-    .dependsOn(ServiceContainerProject)
+  lazy val metricsReporting = Project(id = "service-container-metrics-reporting", base = file("service-container-metrics-reporting"))
+    .settings(standardSettings:_*)
+    .settings(metricsReportingSettings:_*)
+    .dependsOn(core)
 
-  lazy val ServiceContainerExamplesProject: Project = Project(id = "service-container-examples", base = file("service-container-examples"))
+  lazy val examples: Project = Project(id = "service-container-examples", base = file("service-container-examples"))
     .settings(noPublishing:_*)
-    .settings(ExampleSettings:_*)
-    .dependsOn(ServiceContainerProject)
+    .settings(commonSettings:_*)
+    .settings(exampleSettings:_*)
+    .dependsOn(core)
 
 
 }
