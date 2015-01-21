@@ -65,6 +65,11 @@ object Build extends sbt.Build {
       "com.sclasen" %% "akka-kafka" % "0.0.10")
   )
 
+  val MetricsReportingSettings = GeneralSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "com.github.jjagged" % "metrics-statsd" % "1.0.0")
+   )
+
   val noPublishing = Seq(
     publish := (),
     publishLocal := (),
@@ -76,10 +81,14 @@ object Build extends sbt.Build {
   lazy val BaseProject = Project(id="base", base=file("."))
     .settings(noPublishing:_*)
     .dependsOn(ServiceContainerProject)
-    .aggregate(ServiceContainerProject, ServiceContainerExamplesProject)
+    .aggregate(ServiceContainerProject, ServiceContainerMetricsReportingProject, ServiceContainerExamplesProject)
 
   lazy val ServiceContainerProject: Project = Project(id = "service-container", base = file("service-container"))
     .settings(ServiceContainerSettings: _*)
+
+  lazy val ServiceContainerMetricsReportingProject: Project = Project(id = "service-container-metrics-reporting", base = file("service-container-metrics-reporting"))
+    .settings(MetricsReportingSettings:_*)
+    .dependsOn(ServiceContainerProject)
 
   lazy val ServiceContainerExamplesProject: Project = Project(id = "service-container-examples", base = file("service-container-examples"))
     .settings(noPublishing:_*)

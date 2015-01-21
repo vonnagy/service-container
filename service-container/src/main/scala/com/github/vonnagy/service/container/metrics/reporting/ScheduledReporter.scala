@@ -1,6 +1,7 @@
 package com.github.vonnagy.service.container.metrics.reporting
 
 import akka.actor.{ActorSystem, Cancellable}
+import com.github.vonnagy.service.container.health.ContainerInfo
 import com.github.vonnagy.service.container.metrics.Metrics
 import com.typesafe.config.Config
 
@@ -11,6 +12,9 @@ abstract class ScheduledReporter {
   implicit val system: ActorSystem
   implicit val config: Config
   val metrics = Metrics(system)
+  val host = ContainerInfo.host
+  val application = ContainerInfo.application
+  val version = ContainerInfo.applicationVersion
 
   private[reporting] var schedule: Option[Cancellable] = None
 

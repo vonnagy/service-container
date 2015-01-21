@@ -12,11 +12,11 @@ import com.github.vonnagy.service.container.log.LoggingAdapter
  */
 object ContainerInfo extends LoggingAdapter {
 
-  val scalaVersion = util.Properties.versionString
+  private val mainClass = getMainClass;
+  private val applicationInfo = getApplicationInfo
 
+  val scalaVersion = util.Properties.versionString
   val host = getHostInternal
-  val mainClass = getMainClass;
-  val applicationInfo = getApplicationInfo
   val application = applicationInfo._1
   val applicationVersion = applicationInfo._2
 
@@ -48,7 +48,7 @@ object ContainerInfo extends LoggingAdapter {
       return Tuple2[String, String](man.getMainAttributes.getValue(Name.IMPLEMENTATION_TITLE), man.getMainAttributes.getValue("Implementation-Version") + "." + man.getMainAttributes.getValue("Implementation-Build"))
     }
     else {
-      return Tuple2[String, String]("Container Service", "N/A")
+      return Tuple2[String, String]("Container Service", "1.0.0.N/A")
     }
   }
 
@@ -96,7 +96,6 @@ object ContainerInfo extends LoggingAdapter {
         manifest.getMainAttributes.put(Name.IMPLEMENTATION_TITLE, "Container Service")
         manifest.getMainAttributes.put(Name.IMPLEMENTATION_VERSION, "1.0.0")
         manifest.getMainAttributes.put(new Attributes.Name("Implementation-Build"), "N/A")
-        log.error("Could not fetch the manifest", e)
         return manifest
       }
     }
