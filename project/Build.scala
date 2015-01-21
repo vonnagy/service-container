@@ -60,8 +60,21 @@ object Build extends sbt.Build {
   // Join the settings together
   val ServiceContainerSettings = GeneralSettings ++ Publish.settings ++ Test.settings
 
+  val ExampleSettings = GeneralSettings ++ Seq(
+    libraryDependencies ++= Seq(
+      "com.sclasen" %% "akka-kafka" % "0.0.10")
+  )
+
+  val noPublishing = Seq(
+    publish := (),
+    publishLocal := (),
+    // required until these tickets are closed https://github.com/sbt/sbt-pgp/issues/42,
+    // https://github.com/sbt/sbt-pgp/issues/36
+    publishTo := None
+  )
+
   lazy val BaseProject = Project(id="base", base=file("."))
-    //.settings(noPubSettings:_*)
+    .settings(noPublishing:_*)
     .dependsOn(ServiceContainerProject)
     .aggregate(ServiceContainerProject, ServiceContainerExamplesProject)
 
@@ -69,6 +82,8 @@ object Build extends sbt.Build {
     .settings(ServiceContainerSettings: _*)
 
   lazy val ServiceContainerExamplesProject: Project = Project(id = "service-container-examples", base = file("service-container-examples"))
+    .settings(noPublishing:_*)
+    .settings(ExampleSettings:_*)
     .dependsOn(ServiceContainerProject)
 
 

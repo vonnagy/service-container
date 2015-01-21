@@ -3,14 +3,25 @@ import com.github.vonnagy.service.container.ContainerBuilder
 import com.github.vonnagy.service.container.http.DefaultMarshallers
 import com.github.vonnagy.service.container.http.routing._
 import com.github.vonnagy.service.container.log.ActorLoggingAdapter
+import com.typesafe.config.ConfigFactory
 import spray.http.{MediaTypes, StatusCodes}
 
-// An example use of a basic REST service
+/**
+ * An example use of a basic REST service. This can be run without any additional
+ * setup.
+ */
+
 object RestHttpSample extends App {
 
   // Here we establish the container and build it while
   // applying extras.
   val service = new ContainerBuilder()
+    // Add a config to override the host and port
+    .withConfig(ConfigFactory.parseString(
+      """
+        container.http.interface = "localhost"
+        container.http.port = "9092"
+      """.stripMargin))
     // Add some endpoints
     .withRoutes(classOf[ProductEndpoints]).build
 

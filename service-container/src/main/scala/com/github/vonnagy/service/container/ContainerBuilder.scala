@@ -3,8 +3,9 @@ package com.github.vonnagy.service.container
 import akka.actor.Props
 import com.github.vonnagy.service.container.health.HealthCheck
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
-import com.github.vonnagy.service.container.metrics.reporting.ScheduledReporter
 import com.github.vonnagy.service.container.service.ContainerService
+import com.typesafe.config.Config
+
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -12,9 +13,20 @@ import scala.collection.mutable.ListBuffer
  */
 class ContainerBuilder {
 
+  private var config: Option[Config] = None
   private val routedEndpoints = ListBuffer.empty[Class[_ <: RoutedEndpoints]]
   private val healthChecks = ListBuffer.empty[HealthCheck]
   private val props = ListBuffer.empty[Tuple2[String, Props]]
+
+  /**
+   * Add a custom config
+   * @param conf An instance of Config
+   * @return the ContainerBuilder
+   */
+  def withConfig(conf: Config): ContainerBuilder = {
+    this.config = Some(conf)
+    this
+  }
 
   /**
    * Add any REST endpoint handlers that your service requires
@@ -56,7 +68,8 @@ class ContainerBuilder {
   def build: ContainerService = {
     val svc = new ContainerService(routedEndpoints.toSeq,
       healthChecks.toSeq,
-      props.toSeq) with App
+      props.toSeq,
+      config) with App
 
     svc
   }

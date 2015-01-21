@@ -25,7 +25,7 @@ class MetricsEndpointsSpec extends Specification with Specs2RouteTest {
       }
     }
 
-    "a call to /metrics should return and error due to CIDR rules" in {
+    "a call to /metrics should return an error due to CIDR rules" in {
       import spray.http.HttpHeaders.Accept
       Get("/metrics").withHeaders(Accept(MediaTypes.`application/json`), `Remote-Address`(RemoteAddress("192.168.1.1"))) ~> endpoints.route ~> check {
         handled must beTrue
