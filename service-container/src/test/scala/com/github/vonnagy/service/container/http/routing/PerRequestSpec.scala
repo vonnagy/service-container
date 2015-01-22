@@ -11,7 +11,6 @@ import spray.routing.RequestContext
 class PerRequestSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
 
   sequential
-  implicit val marsh = DefaultMarshallers.plainMarshaller
 
   object Creator extends PerRequestCreator
 

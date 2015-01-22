@@ -34,7 +34,7 @@ object RestHttpSample extends App {
   case class GetProduct(id: Option[Int]) extends RestRequest
 
   class ProductEndpoints(implicit system: ActorSystem,
-                         actorRefFactory: ActorRefFactory) extends RoutedEndpoints with DefaultMarshallers {
+                         actorRefFactory: ActorRefFactory) extends RoutedEndpoints {
 
     // Import the default Json marshaller and un-marshaller
     implicit val marshaller = jsonMarshaller
@@ -52,18 +52,24 @@ object RestHttpSample extends App {
                   perRequest[Seq[Product]](ctx, Props(new ProductHandler), GetProduct(None))
               }
             }
-          }
-        } ~
-          path(IntNumber) { productId =>
-            acceptableMediaTypes(MediaTypes.`application/json`) {
-              // This is the path like ``http://api.somecompany.com/products/1001`` and will fetch the specified product
-              respondWithMediaType(MediaTypes.`application/json`) {
-                ctx =>
-                  // Push the handling to another context so that we don't block
-                  perRequest[Product](ctx, Props(new ProductHandler), GetProduct(Some(productId)))
+          } ~
+            path(IntNumber) { productId =>
+              acceptableMediaTypes(MediaTypes.`application/json`) {
+                // This is the path like ``http://api.somecompany.com/products/1001`` and will fetch the specified product
+                respondWithMediaType(MediaTypes.`application/json`) {
+                  ctx =>
+                    // Push the handling to another context so that we don't block
+                    perRequest[Product](ctx, Props(new ProductHandler), GetProduct(Some(productId)))
+                }
               }
             }
+        } ~
+        post {
+          // Simulate the creation of a product. This call is handled in-line and not through the per-request handler.
+          entity(as[Product]) { product =>
+            complete(Product(Some(1001), product.name))
           }
+        }
       }
     }
   }

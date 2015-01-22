@@ -2,14 +2,14 @@ package com.github.vonnagy.service.container.http.routing
 
 import akka.actor.{Actor, ActorRefFactory, ActorSystem}
 import akka.routing.Broadcast
-import com.github.vonnagy.service.container.http.BaseDirectives
+import com.github.vonnagy.service.container.http.{DefaultMarshallers, BaseDirectives}
 import spray.routing.Route
 
 /**
  * Apply this trait to provide Http routing for the defined routes.
  */
 abstract class RoutedEndpoints(implicit system: ActorSystem,
-                               actorRefFactory: ActorRefFactory) extends PerRequestCreator with BaseDirectives {
+                               actorRefFactory: ActorRefFactory) extends PerRequestCreator with BaseDirectives with DefaultMarshallers {
 
   def route: Route
 }

@@ -1,13 +1,13 @@
 package com.github.vonnagy.service.container.health
 
 import akka.actor.{ActorRefFactory, ActorSystem, Props}
-import com.github.vonnagy.service.container.http.DefaultMarshallers
+import akka.japi.Util.immutableSeq
 import com.github.vonnagy.service.container.http.directives.CIDRDirectives
 import com.github.vonnagy.service.container.http.routing.{PerRequestHandler, RestRequest, RoutedEndpoints}
 import org.joda.time.DateTime
 import spray.http.MediaTypes
 import spray.http.StatusCodes._
-import akka.japi.Util.immutableSeq
+
 import scala.util.{Failure, Success}
 
 // Message class for requesting the system's health
@@ -22,6 +22,7 @@ class HealthEndpoints(implicit system: ActorSystem,
 
   lazy val config = system.settings.config.getConfig("container.http")
 
+
   val route = {
     pathPrefix("health") {
       cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
@@ -31,7 +32,7 @@ class HealthEndpoints(implicit system: ActorSystem,
               compressResponseIfRequested() {
                 respondJson {
                   ctx =>
-                    implicit def marsh = DefaultMarshallers.jsonMarshaller
+                    implicit val marshaller = jsonMarshaller
                     perRequest[ContainerHealth](ctx, HealthHandler.props(), HealthRequest(false))
                 }
               }
@@ -40,7 +41,7 @@ class HealthEndpoints(implicit system: ActorSystem,
             path("lb") {
               respondPlain {
                 ctx =>
-                  implicit def marsh = DefaultMarshallers.plainMarshaller
+                  implicit def marsh = plainMarshaller
                   perRequest[String](ctx, HealthHandler.props(), HealthRequest(true))
               }
             }

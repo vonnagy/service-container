@@ -3,7 +3,7 @@ package com.github.vonnagy.service.container.http.routing
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor._
 import com.github.vonnagy.service.container.http.DefaultMarshallers
-import com.github.vonnagy.service.container.http.routing.PerRequest.{WithProps, WithActorRef}
+import com.github.vonnagy.service.container.http.routing.PerRequest.{WithActorRef, WithProps}
 import spray.can.server.ServerSettings
 import spray.http.StatusCode
 import spray.http.StatusCodes._
