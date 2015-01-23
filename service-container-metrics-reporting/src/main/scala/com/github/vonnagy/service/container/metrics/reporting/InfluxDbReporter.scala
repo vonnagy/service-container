@@ -27,8 +27,9 @@ class InfluxDbReporter(implicit val system: ActorSystem, val config: Config) ext
    */
   override def stop: Unit = {
     super.stop
-    if (influxDb != null)
+    if (influxDb != null) {
       influxDb
+    }
   }
 
   /**

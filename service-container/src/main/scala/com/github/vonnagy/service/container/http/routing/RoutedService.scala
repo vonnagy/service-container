@@ -111,7 +111,9 @@ class RoutedService(val routeEndpoints: Seq[RoutedEndpoints]) extends Actor with
    * @param route
    * @return an instance of ``Actor.Receive``
    */
-  private def applyRoute(route: Route): Actor.Receive = runRoute(route)(exceptionHandler, rejectionHandler, context, RoutingSettings.default, LoggingContext.fromActorRefFactory)
+  private def applyRoute(route: Route): Actor.Receive = {
+    runRoute(route)(exceptionHandler, rejectionHandler, context, RoutingSettings.default, LoggingContext.fromActorRefFactory)
+  }
 
 
 }

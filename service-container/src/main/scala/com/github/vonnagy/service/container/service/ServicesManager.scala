@@ -63,7 +63,8 @@ with HttpService with RegisteredHealthCheckActor with Stash {
     case StatusRunning => sender ! true
 
     case GetHealth =>
-      sender ! HealthInfo("services", HealthState.OK, s"Currently managing ${context.children.toSeq.length} services (including http)", None, List(getHttpHealth))
+      sender ! HealthInfo("services", HealthState.OK,
+        s"Currently managing ${context.children.toSeq.length} services (including http)", None, List(getHttpHealth))
 
     case HttpStopped => context.become(stopped)
 
@@ -77,7 +78,8 @@ with HttpService with RegisteredHealthCheckActor with Stash {
     case StatusRunning => sender ! false
 
     case GetHealth =>
-      sender ! HealthInfo("services", HealthState.CRITICAL, s"The Http service is NOT running. It is currently managing ${context.children.toSeq.length} services (including http)", None, List(getHttpHealth))
+      sender ! HealthInfo("services", HealthState.CRITICAL,
+        s"The Http service is NOT running. It is currently managing ${context.children.toSeq.length} services (including http)", None, List(getHttpHealth))
 
   }: Receive
 

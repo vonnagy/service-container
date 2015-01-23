@@ -45,12 +45,14 @@ case class Counter(val name: String)(implicit val system: ActorSystem) extends M
 case class Gauge[A](val name: String)(f: => A)(implicit val system: ActorSystem) extends MetricName with Instrumented {
 
   private def getGauge: CHGauge[A] = {
-    if (metricRegistry.getGauges.containsKey(name))
+    if (metricRegistry.getGauges.containsKey(name)) {
       metricRegistry.getGauges.get(name).asInstanceOf[CHGauge[A]]
-    else
+    }
+    else {
       metricRegistry.register(name, new CHGauge[A] {
         def getValue: A = f
       })
+    }
 
   }
 

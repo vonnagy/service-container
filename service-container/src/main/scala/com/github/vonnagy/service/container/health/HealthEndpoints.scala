@@ -76,7 +76,9 @@ class HealthHandler extends PerRequestHandler with HealthProvider {
 
       case Failure(t) =>
         log.error("An error occurred while fetching the system's health", t)
-        response(ContainerHealth(ContainerInfo.host, ContainerInfo.application, ContainerInfo.applicationVersion, ContainerInfo.containerVersion, DateTime.now, HealthState.CRITICAL, t.getMessage, Nil), InternalServerError)
+        response(ContainerHealth(ContainerInfo.host, ContainerInfo.application,
+          ContainerInfo.applicationVersion, ContainerInfo.containerVersion,
+          DateTime.now, HealthState.CRITICAL, t.getMessage, Nil), InternalServerError)
     }
   }
 }

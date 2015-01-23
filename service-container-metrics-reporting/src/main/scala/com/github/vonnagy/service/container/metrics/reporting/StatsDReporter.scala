@@ -24,8 +24,9 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
    */
   override def stop: Unit = {
     super.stop
-    if (statsD != null)
+    if (statsD != null) {
       statsD.close()
+    }
   }
 
   /**

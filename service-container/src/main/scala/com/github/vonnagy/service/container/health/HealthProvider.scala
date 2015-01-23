@@ -42,10 +42,14 @@ trait HealthProvider extends LoggingAdapter {
         // Rollup the statuses
         val overallHealth = rollupStatuses(alerts)
         alerts.clear()
-        p success ContainerHealth(ContainerInfo.host, ContainerInfo.application, ContainerInfo.applicationVersion, ContainerInfo.containerVersion, DateTime.now, overallHealth.state, overallHealth.details, checks)
+        p success ContainerHealth(ContainerInfo.host, ContainerInfo.application,
+          ContainerInfo.applicationVersion, ContainerInfo.containerVersion,
+          DateTime.now, overallHealth.state, overallHealth.details, checks)
       case Failure(e) =>
         log.error("An error occurred while fetching the system's health", e)
-        p success ContainerHealth(ContainerInfo.host, ContainerInfo.application, ContainerInfo.applicationVersion, ContainerInfo.containerVersion, DateTime.now, HealthState.CRITICAL, e.getMessage, Nil)
+        p success ContainerHealth(ContainerInfo.host, ContainerInfo.application,
+          ContainerInfo.applicationVersion, ContainerInfo.containerVersion,
+          DateTime.now, HealthState.CRITICAL, e.getMessage, Nil)
     })
 
     p.future

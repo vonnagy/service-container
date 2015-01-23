@@ -45,7 +45,9 @@ object ContainerInfo extends LoggingAdapter {
   private[health] def getApplicationInfo: Tuple2[String, String] = {
     if (mainClass.isDefined) {
       val man: Manifest = getManifest(mainClass.get)
-      return Tuple2[String, String](man.getMainAttributes.getValue(Name.IMPLEMENTATION_TITLE), man.getMainAttributes.getValue("Implementation-Version") + "." + man.getMainAttributes.getValue("Implementation-Build"))
+      return Tuple2[String, String](man.getMainAttributes.getValue(Name.IMPLEMENTATION_TITLE),
+        man.getMainAttributes.getValue("Implementation-Version") + "." +
+          man.getMainAttributes.getValue("Implementation-Build"))
     }
     else {
       return Tuple2[String, String]("Container Service", "1.0.0.N/A")
