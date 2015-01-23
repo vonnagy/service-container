@@ -43,7 +43,6 @@ object Build extends sbt.Build {
         "net.liftweb" %% "lift-json-ext" % LIFT_VERSION,
         "io.dropwizard.metrics" % "metrics-core" % METRICS_VERSION,
         "io.dropwizard.metrics" % "metrics-jvm" % METRICS_VERSION,
-        "io.kamon" %% "kamon-core" % "0.3.5",
         "joda-time" % "joda-time" % "2.6",
         "com.typesafe.akka" %% "akka-testkit" % AKKA_VERSION % "test",
         "io.spray" % "spray-testkit" % SPRAY_VERSION % "test",
