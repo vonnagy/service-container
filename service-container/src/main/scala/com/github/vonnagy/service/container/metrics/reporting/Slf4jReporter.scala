@@ -27,6 +27,7 @@ class Slf4jReporter(implicit val system: ActorSystem, val config: Config) extend
     com.codahale.metrics.Slf4jReporter.forRegistry(metrics.metricRegistry)
       .outputTo(LoggerFactory.getLogger(config.getString("logger")))
       .convertRatesTo(TimeUnit.SECONDS)
-      .convertDurationsTo(TimeUnit.MILLISECONDS).build
+      .convertDurationsTo(TimeUnit.MILLISECONDS)
+      .build
   }
 }

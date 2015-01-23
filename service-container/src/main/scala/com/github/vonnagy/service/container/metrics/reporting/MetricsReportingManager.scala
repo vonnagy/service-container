@@ -7,7 +7,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState, RegisteredHealthCheckActor}
 import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.github.vonnagy.service.container.metrics.Metrics
-import com.typesafe.config.Config
+import com.typesafe.config.{ConfigRenderOptions, Config}
 
 import scala.collection.convert.WrapAsScala
 import scala.concurrent.duration.FiniteDuration
@@ -28,9 +28,19 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
 
   private[reporting] var reporters = Seq.empty[ScheduledReporter]
 
+  def receive = {
+    case GetHealth => sender ! checkHealth
+  }
+
   override def preStart: Unit = {
     // Start the defined reporters
     startReporters
+  }
+
+
+  override def postStop: Unit = {
+    // Stop the running reporters
+    stopReporters
   }
 
   /**
@@ -46,6 +56,8 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
           if (master.getConfig(entry.getKey).getBoolean("enabled"))
         } yield {
           val config = master.getConfig(entry.getKey)
+          val json = config.root.render(ConfigRenderOptions.defaults)
+
           val clazz = config.getString("class")
 
           metrics.system.dynamicAccess.createInstanceFor[ScheduledReporter](clazz,
@@ -70,11 +82,6 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
     }
   }
 
-  override def postStop: Unit = {
-    // Stop the running reporters
-    stopReporters
-  }
-
   /**
    * Stop the running reporters
    */
@@ -83,8 +90,18 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
     reporters = Seq.empty[ScheduledReporter]
   }
 
-  def receive = {
-    case GetHealth => sender ! HealthInfo("metrics-reporting", HealthState.OK, s"The system is currently managing ${reporters.length} metrics reporters")
-  }
+  private def checkHealth: HealthInfo = {
+    if (reporters.length == 0) {
+      HealthInfo("metrics-reporting", HealthState.OK, s"The system is currently not managing any metrics reporters")
+    }
+    else {
+      val x = for {
+        reporter <- reporters
+      } yield {
+        reporter.getClass.getName
+      }
 
+      HealthInfo("metrics-reporting", HealthState.OK, s"The system is currently managing ${reporters.length} metrics reporters", Some(x))
+    }
+  }
 }

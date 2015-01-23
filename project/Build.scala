@@ -6,7 +6,7 @@ object Build extends sbt.Build {
   val AKKA_VERSION = "2.3.8"
   val SPRAY_VERSION = "1.3.1"
   val CONFIG_VERSION = "1.2.1"
-  val CODAHALE_VERSION = "3.0.2"
+  val METRICS_VERSION = "3.1.0"
   val LIFT_VERSION = "2.5.1"
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
@@ -41,8 +41,9 @@ object Build extends sbt.Build {
         "org.slf4j" % "log4j-over-slf4j" % "1.7.5",
         "net.liftweb" %% "lift-json" % LIFT_VERSION,
         "net.liftweb" %% "lift-json-ext" % LIFT_VERSION,
-        "com.codahale.metrics" % "metrics-core" % CODAHALE_VERSION,
-        "com.codahale.metrics" % "metrics-jvm" % CODAHALE_VERSION,
+        "io.dropwizard.metrics" % "metrics-core" % METRICS_VERSION,
+        "io.dropwizard.metrics" % "metrics-jvm" % METRICS_VERSION,
+        "io.kamon" %% "kamon-core" % "0.3.5",
         "joda-time" % "joda-time" % "2.6",
         "com.typesafe.akka" %% "akka-testkit" % AKKA_VERSION % "test",
         "io.spray" % "spray-testkit" % SPRAY_VERSION % "test",
@@ -61,14 +62,14 @@ object Build extends sbt.Build {
     name := "service-container-examples",
     libraryDependencies ++= Seq(
       "com.sclasen" %% "akka-kafka" % "0.0.10")
-  ) ++ Test.settings
+  ) ++ Publish.settings
 
   val metricsReportingSettings = Seq(
     name := "service-container-metrics-reporting",
     libraryDependencies ++= Seq(
       "com.github.jjagged" % "metrics-statsd" % "1.0.0",
       "com.novaquark" % "metrics-influxdb" % "0.3.0")
-   )
+   ) ++ Test.settings
 
   val noPublishing = Seq(
     publish := (),
@@ -92,7 +93,6 @@ object Build extends sbt.Build {
     .dependsOn(core)
 
   lazy val examples: Project = Project(id = "service-container-examples", base = file("service-container-examples"))
-    .settings(noPublishing:_*)
     .settings(commonSettings:_*)
     .settings(exampleSettings:_*)
     .dependsOn(core)

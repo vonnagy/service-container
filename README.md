@@ -25,6 +25,14 @@ expose canned endpoints. These endpoints can be used for such things as checking
 
 [Instructions](docs/Endpoints.md)
 
+### Metrics
+
+The Service Container implements logic to track metrics within the system. It automatically tracks JVM and other internal metrics. The framework
+also provides the ability to track any number of custom metrics. Once metrics are gathered, the can be accessed by the `/metrics` endpoint and
+written out using any number of metrics reporters.
+
+[Instructions](docs/Metrics.md)
+
 
 ### License
 

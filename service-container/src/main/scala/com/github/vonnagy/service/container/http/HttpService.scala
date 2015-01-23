@@ -113,15 +113,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics {
       } yield {
         val ct = route.getConstructors.last
         val params = ct.getParameterTypes
-        //          ct.newInstance()
-        //          val c = currentMirror.staticClass(route.getName)
-        //          val cm = currentMirror.reflectClass(c)
-        //          val t = c.selfType
-        //          val ctor = t.declaration(ru.nme.CONSTRUCTOR).asMethod
-        //          val ctorm = cm.reflectConstructor(ctor)
-        //          val args = ctor.asMethod.paramss.head map { p => (p.name.decoded, p.typeSignature) }
 
-        //val p = ctorm(context.system)
         val p = params.length match {
           case 0 => Nil
           case _ => List(classOf[ActorSystem] -> context.system)

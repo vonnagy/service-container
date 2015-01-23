@@ -2,7 +2,7 @@ package com.github.vonnagy.service.container.metrics
 
 import akka.actor.ActorSystem
 
-trait Instrumented {
+private[metrics] trait Instrumented {
 
   implicit val system: ActorSystem
 

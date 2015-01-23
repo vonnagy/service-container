@@ -7,14 +7,130 @@ are applied to some of the calls and are labeled in the table below.
 
 ## Available Endpoints
 
-| Description           | Verb  | URL                           | Description   | Example   | CIDR Rules    |
-| :-------------------- | :---- | :---------------------------- | :------------- | :--------- | :----------    |
-| Ping                  | GET   | /ping                         | A simple ping that returns a timestamp              |           | No            |
-| Health Check (Full)   | GET   | /health                  | This endpoint rolls up all registered health checkers and returns the service's status. The returns full documentation of the status.             |           | Yes           |
-| Health Check (LB)     | GET   | /health/lb               | This endpoint performs the health check like the endpoint above, but returned a stripped down response. This is useful to use as a basis for Load Balancer health state calls.              |           | Yes           |
-| Metrics               | GET   | /metrics                      | This endpoint returns the metrics data that has been collected y the service.              |           | Yes           |
-| Shutdown              | POST  | /shutdown                     | This shuts down the service.              |           | Yes           |
+The endpoints described below are built into the container and are always available. Example output is provided
+after the table.
 
+| Description           | Verb  | URL           | Description    | CIDR Rules  |
+| :-------------------- | :---- | :------------ | :------------- | :---------- |
+| Ping                  | GET   | /ping         | A simple ping that returns a timestamp    | No   |
+| Health Check (Full)   | GET   | /health       | This endpoint rolls up all registered health checkers and returns the service's status. The returns full documentation of the status.   | Yes  |
+| Health Check (LB)     | GET   | /health/lb    | This endpoint performs the health check like the endpoint above, but returned a stripped down response. This is useful to use as a basis for Load Balancer health state calls.  | Yes  |
+| Metrics               | GET   | /metrics      | This endpoint returns the metrics data that has been collected y the service.    | Yes  |
+| Shutdown              | POST  | /shutdown     | This shuts down the service.              | Yes  |
+
+
+### Ping
+```
+  pong: 2015-01-23T15:11:21.805Z
+```
+
+### Health Check (full)
+```json
+{
+  "host": "my-host",
+  "applicationName": "Container Service",
+  "applicationVersion": "1.0.0.N/A",
+  "containerVersion": "1.0.0.N/A",
+  "time": "2015-01-23T15:11:50Z",
+  "state": "OK",
+  "details": "All sub-systems report perfect health",
+  "checks": [
+    {
+      "name": "services",
+      "state": "OK",
+      "details": "Currently managing 2 services (including http)",
+      "checks": [
+        {
+          "name": "http",
+          "state": "OK",
+          "details": "Currently connected on localhost:9092",
+          "checks": []
+        }
+      ]
+    },
+    {
+      "name": "metrics-reporting",
+      "state": "OK",
+      "details": "The system is currently managing 1 metrics reporters",
+      "extra": [
+        "com.github.vonnagy.service.container.metrics.reporting.Slf4jReporter"
+      ]
+      "checks": []
+    }
+  ]
+}
+```
+
+### Health Check (load balancer)
+```
+UP
+```
+
+### Metrics
+```json
+{
+  "system": {
+    "jvm": {
+      "buffers": {
+        "jvm.buffer-pool.direct.capacity": 262144,
+        "jvm.buffer-pool.direct.count": 2,
+        "jvm.buffer-pool.direct.used": 262144,
+        "jvm.buffer-pool.mapped.capacity": 0,
+        "jvm.buffer-pool.mapped.count": 0,
+        "jvm.buffer-pool.mapped.used": 0
+      },
+      "garbage-collection": {
+        "jvm.gc.PS-MarkSweep.count": 0,
+        "jvm.gc.PS-MarkSweep.time": 0,
+        "jvm.gc.PS-Scavenge.count": 3,
+        "jvm.gc.PS-Scavenge.time": 25
+      },
+      "memory": {
+        "jvm.memory.heap.committed": 257425408,
+        "jvm.memory.heap.init": 268435456,
+        "jvm.memory.heap.max": 3817865216,
+        "jvm.memory.heap.usage": 0.009573722992320533,
+        "jvm.memory.heap.used": 36551184,
+        "jvm.memory.non-heap.committed": 34013184,
+        "jvm.memory.non-heap.init": 24576000,
+        "jvm.memory.non-heap.max": 136314880,
+        "jvm.memory.non-heap.usage": 0.237582514836238,
+        "jvm.memory.non-heap.used": 32386032,
+        "jvm.memory.pools.Code-Cache.usage": 0.020242055257161457,
+        "jvm.memory.pools.PS-Eden-Space.usage": 0.017576433992509993,
+        "jvm.memory.pools.PS-Old-Gen.usage": 2.7688792546008055E-4,
+        "jvm.memory.pools.PS-Perm-Gen.usage": 0.3648061984922828,
+        "jvm.memory.pools.PS-Survivor-Space.usage": 0.9971778506324405,
+        "jvm.memory.total.committed": 291438592,
+        "jvm.memory.total.init": 293011456,
+        "jvm.memory.total.max": 3954180096,
+        "jvm.memory.total.used": 69167216
+      },
+      "thread-states": {
+        "jvm.thread.blocked.count": 0,
+        "jvm.thread.count": 14,
+        "jvm.thread.daemon.count": 3,
+        "jvm.thread.deadlocks": null,
+        "jvm.thread.new.count": 0,
+        "jvm.thread.runnable.count": 4,
+        "jvm.thread.terminated.count": 0,
+        "jvm.thread.timed_waiting.count": 1,
+        "jvm.thread.waiting.count": 9
+      }
+    },
+    "metrics": {
+      "container.http.connections.max-open": 2,
+      "container.http.connections.open": 0,
+      "container.http.connections.total": 4,
+      "container.http.idle-timeouts": 0,
+      "container.http.requests.max-open": 1,
+      "container.http.requests.open": 0,
+      "container.http.requests.total": 4,
+      "container.http.uptime": 1310088
+    }
+  }
+}
+```
 
 ## CIDR (Classless Inter-Domain Routing) Rules
 
