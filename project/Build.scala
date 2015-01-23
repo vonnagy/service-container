@@ -61,15 +61,14 @@ object Build extends sbt.Build {
     name := "service-container-examples",
     libraryDependencies ++= Seq(
       "com.sclasen" %% "akka-kafka" % "0.0.10")
-  ) ++ Publish.settings
+  ) ++ Test.settings
 
   val metricsReportingSettings = Seq(
     name := "service-container-metrics-reporting",
     libraryDependencies ++= Seq(
       "com.github.jjagged" % "metrics-statsd" % "1.0.0",
       "com.novaquark" % "metrics-influxdb" % "0.3.0")
-   ) ++ Test.settings
-
+   )
   val noPublishing = Seq(
     publish := (),
     publishLocal := (),
