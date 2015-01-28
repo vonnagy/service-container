@@ -68,7 +68,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics {
   def startHttpServer(routes: Seq[Class[_ <: RoutedEndpoints]]): Unit = {
 
     implicit val timeout = Timeout(2 seconds)
-    val loadedRoutes = loadRoutes(routes)// ++ Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints]))
+    val loadedRoutes = loadRoutes(routes ++ Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints]))
     val httpService = context.actorOf(FromConfig.props(RoutedService.props(loadedRoutes)), "http")
 
     // a running HttpServer can be bound, unbound and rebound
