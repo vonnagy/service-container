@@ -19,9 +19,9 @@ class MetricsEndpoints(implicit system: ActorSystem,
       cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
         get {
           acceptableMediaTypes(MediaTypes.`application/json`) {
-            compressResponseIfRequested() {
-              respondJson {
-                detach() {
+            detach() {
+              compressResponseIfRequested() {
+                respondJson {
                   complete(writer.getMetrics(true))
                 }
               }

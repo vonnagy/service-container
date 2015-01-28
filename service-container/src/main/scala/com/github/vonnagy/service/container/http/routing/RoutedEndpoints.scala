@@ -9,7 +9,7 @@ import spray.routing.Route
  * Apply this trait to provide Http routing for the defined routes.
  */
 abstract class RoutedEndpoints(implicit system: ActorSystem,
-                               actorRefFactory: ActorRefFactory) extends PerRequestCreator with BaseDirectives with DefaultMarshallers {
+                               actorRefFactory: ActorRefFactory) extends BaseDirectives with DefaultMarshallers {
 
   def route: Route
 }

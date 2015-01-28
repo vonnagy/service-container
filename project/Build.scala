@@ -29,27 +29,26 @@ object Build extends sbt.Build {
 
     libraryDependencies ++= {
       Seq(
-        "io.spray" % "spray-can" % SPRAY_VERSION,
-        "io.spray" % "spray-http" % SPRAY_VERSION,
-        "io.spray" % "spray-httpx" % SPRAY_VERSION,
-        "io.spray" % "spray-routing" % SPRAY_VERSION,
-        "com.typesafe" % "config" % CONFIG_VERSION,
-        "com.typesafe.akka" %% "akka-actor" % AKKA_VERSION,
-        "com.typesafe.akka" %% "akka-slf4j" % AKKA_VERSION,
-        "org.slf4j" % "slf4j-api" % "1.7.5",
-        "ch.qos.logback" % "logback-classic" % "1.0.13",
-        "org.slf4j" % "log4j-over-slf4j" % "1.7.5",
-        "net.liftweb" %% "lift-json" % LIFT_VERSION,
-        "net.liftweb" %% "lift-json-ext" % LIFT_VERSION,
-        "io.dropwizard.metrics" % "metrics-core" % METRICS_VERSION,
-        "io.dropwizard.metrics" % "metrics-jvm" % METRICS_VERSION,
-        "joda-time" % "joda-time" % "2.6",
-        "com.typesafe.akka" %% "akka-testkit" % AKKA_VERSION % "test",
-        "io.spray" % "spray-testkit" % SPRAY_VERSION % "test",
-        "junit" % "junit" % "4.12" % "test",
-        "org.specs2" %% "specs2-core" % "2.4.15" % "test",
-        "org.scalamock" %% "scalamock-specs2-support" % "3.2.1" % "test" exclude("org.specs2", "specs2"),
-        "com.novocode" % "junit-interface" % "0.11" % "test"
+        "io.spray"              % "spray-can"         % SPRAY_VERSION,
+        "io.spray"              % "spray-http"        % SPRAY_VERSION,
+        "io.spray"              % "spray-httpx"       % SPRAY_VERSION,
+        "io.spray"              % "spray-routing"     % SPRAY_VERSION,
+        "com.typesafe"          % "config"            % CONFIG_VERSION,
+        "com.typesafe.akka"     %% "akka-actor"       % AKKA_VERSION exclude ("org.scala-lang" , "scala-library"),
+        "com.typesafe.akka"     %% "akka-slf4j"       % AKKA_VERSION exclude ("org.slf4j", "slf4j-api") exclude ("org.scala-lang" , "scala-library"),
+        "org.slf4j"             % "slf4j-api"         % "1.7.5",
+        "ch.qos.logback"        % "logback-classic"   % "1.0.13",
+        "org.slf4j"             % "log4j-over-slf4j"  % "1.7.5",
+        "net.liftweb"           %% "lift-json"        % LIFT_VERSION,
+        "net.liftweb"           %% "lift-json-ext"    % LIFT_VERSION exclude ("org.scala-lang" , "scala-compiler"),
+        "io.dropwizard.metrics" % "metrics-core"      % METRICS_VERSION,
+        "io.dropwizard.metrics" % "metrics-jvm"       % METRICS_VERSION,
+        "joda-time"             % "joda-time"         % "2.6",
+        "com.typesafe.akka"     %% "akka-testkit"     % AKKA_VERSION    % "test",
+        "io.spray"              % "spray-testkit"     % SPRAY_VERSION   % "test",
+        "junit"                 % "junit"             % "4.12"          % "test",
+        "org.specs2"            %% "specs2-core"      % "2.4.15"        % "test",
+        "org.scalamock"         %% "scalamock-specs2-support" % "3.2.1" % "test" exclude("org.specs2", "specs2")
       )
     }
   )
@@ -66,9 +65,10 @@ object Build extends sbt.Build {
   val metricsReportingSettings = Seq(
     name := "service-container-metrics-reporting",
     libraryDependencies ++= Seq(
-      "com.github.jjagged" % "metrics-statsd" % "1.0.0",
-      "com.novaquark" % "metrics-influxdb" % "0.3.0")
+      "com.github.jjagged" % "metrics-statsd" % "1.0.0" exclude("com.codahale.metrics", "metrics"),
+      "com.novaquark" % "metrics-influxdb" % "0.3.0" exclude("com.codahale.metrics", "metrics"))
    )
+
   val noPublishing = Seq(
     publish := (),
     publishLocal := (),
@@ -91,6 +91,7 @@ object Build extends sbt.Build {
     .dependsOn(core)
 
   lazy val examples: Project = Project(id = "service-container-examples", base = file("service-container-examples"))
+    .settings(noPublishing:_*)
     .settings(commonSettings:_*)
     .settings(exampleSettings:_*)
     .dependsOn(core)

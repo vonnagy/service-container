@@ -20,9 +20,6 @@ object Publish {
     // Publishing settings
     publishMavenStyle := true,
 
-    // Don't include the scala version
-    crossPaths := false,
-
     // Don't publish any of the test stuff
     publishArtifact in sbt.Test := false,
 

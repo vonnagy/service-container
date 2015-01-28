@@ -15,26 +15,24 @@ class BaseEndpoints(implicit system: ActorSystem,
   lazy val config = system.settings.config.getConfig("container.http")
 
   val route = {
-    get {
-      path("favicon.ico") {
-        complete(StatusCodes.NoContent)
-      } ~
-        path("ping") {
-          respondPlain {
-            complete("pong: ".concat(new DateTime(System.currentTimeMillis(), DateTimeZone.UTC).toString))
-          }
-        }
+    path("favicon.ico") {
+      complete(StatusCodes.NoContent)
     } ~
+    path("ping") {
+      respondPlain {
+        complete("pong: ".concat(new DateTime(System.currentTimeMillis(), DateTimeZone.UTC).toString))
+      }
+    } ~
+    path("shutdown") {
       post {
-        path("shutdown") {
-          cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
-            respondPlain { ctx =>
-              ctx.complete("The system is being shutdown: ".concat(new DateTime(System.currentTimeMillis(), DateTimeZone.UTC).toString))
-              sys.exit(0)
-            }
+        cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
+          respondPlain { ctx =>
+            ctx.complete("The system is being shutdown: ".concat(new DateTime(System.currentTimeMillis(), DateTimeZone.UTC).toString))
+            sys.exit(0)
           }
         }
       }
+    }
   }
 
 }

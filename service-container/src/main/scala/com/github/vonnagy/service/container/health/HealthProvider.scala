@@ -2,11 +2,11 @@ package com.github.vonnagy.service.container.health
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
+import com.github.vonnagy.service.container.health.HealthState._
+import com.github.vonnagy.service.container.log.LoggingAdapter
 import net.liftweb.json.Extraction
 import net.liftweb.json.ext.{EnumNameSerializer, JodaTimeSerializers}
 import org.joda.time.DateTime
-import com.github.vonnagy.service.container.health.HealthState._
-import com.github.vonnagy.service.container.log.LoggingAdapter
 
 import scala.collection.mutable
 import scala.concurrent.duration._

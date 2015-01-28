@@ -1,27 +1,26 @@
 package com.github.vonnagy.service.container.health
 
-import akka.actor.{ActorRefFactory, ActorSystem, Props}
+import akka.actor.{ActorRefFactory, ActorSystem}
 import akka.japi.Util.immutableSeq
 import com.github.vonnagy.service.container.http.directives.CIDRDirectives
-import com.github.vonnagy.service.container.http.routing.{PerRequestHandler, RestRequest, RoutedEndpoints}
+import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import org.joda.time.DateTime
 import spray.http.MediaTypes
 import spray.http.StatusCodes._
+import spray.httpx.marshalling.{Marshaller, ToResponseMarshaller}
+import spray.routing.Route
 
 import scala.util.{Failure, Success}
-
-// Message class for requesting the system's health
-case class HealthRequest(loadBalancer: Boolean) extends RestRequest
 
 /**
  * The REST endpoints for checking the system's health
  */
-class HealthEndpoints(implicit system: ActorSystem,
+class HealthEndpoints(implicit val system: ActorSystem,
                       actorRefFactory: ActorRefFactory)
-  extends RoutedEndpoints with CIDRDirectives {
+  extends RoutedEndpoints with HealthProvider with CIDRDirectives {
 
   lazy val config = system.settings.config.getConfig("container.http")
-
+  implicit val executor = system.dispatcher
 
   val route = {
     pathPrefix("health") {
@@ -31,54 +30,39 @@ class HealthEndpoints(implicit system: ActorSystem,
             acceptableMediaTypes(MediaTypes.`application/json`) {
               compressResponseIfRequested() {
                 respondJson {
-                  ctx =>
-                    implicit val marshaller = jsonMarshaller
-                    perRequest[ContainerHealth](ctx, HealthHandler.props(), HealthRequest(false))
+                  handleHealth(false)(jsonMarshaller)
                 }
               }
             }
           } ~
             path("lb") {
-              respondPlain {
-                ctx =>
-                  implicit def marsh = plainMarshaller
-                  perRequest[String](ctx, HealthHandler.props(), HealthRequest(true))
-              }
+              handleHealth(true)(plainMarshaller)
             }
+
         }
       }
     }
   }
 
-}
 
+  /**
+   * The handler that is instantiated when the system's health is requested
+   */
+  def handleHealth(loadBalancer: Boolean)(implicit marshaller: Marshaller[AnyRef]): Route = ctx =>
 
-object HealthHandler {
-  def props(): Props = Props[HealthHandler]
-}
-
-/**
- * The handler that is instantiated when the system's health is requested
- */
-class HealthHandler extends PerRequestHandler with HealthProvider {
-
-  implicit val system = context.system
-  implicit val executor = context.dispatcher
-
-  def receive = {
-    case HealthRequest(loadBalancer) => runChecks.onComplete {
+    runChecks.onComplete {
       case Success(check) =>
         check.state match {
-          case HealthState.OK => response(serialize(loadBalancer, check), OK)
-          case HealthState.DEGRADED => response(serialize(loadBalancer, check), OK)
-          case HealthState.CRITICAL => response(serialize(loadBalancer, check), ServiceUnavailable)
+          case HealthState.OK => ctx.complete(serialize(loadBalancer, check))(marshaller)
+          case HealthState.DEGRADED => ctx.complete(serialize(loadBalancer, check))(marshaller)
+          case HealthState.CRITICAL =>
+            ctx.complete(serialize(loadBalancer, check))(ToResponseMarshaller.fromMarshaller(ServiceUnavailable)(marshaller))
         }
 
       case Failure(t) =>
         log.error("An error occurred while fetching the system's health", t)
-        response(ContainerHealth(ContainerInfo.host, ContainerInfo.application,
+        ctx.complete(InternalServerError, ContainerHealth(ContainerInfo.host, ContainerInfo.application,
           ContainerInfo.applicationVersion, ContainerInfo.containerVersion,
-          DateTime.now, HealthState.CRITICAL, t.getMessage, Nil), InternalServerError)
+          DateTime.now, HealthState.CRITICAL, t.getMessage, Nil))(marshaller)
     }
-  }
 }

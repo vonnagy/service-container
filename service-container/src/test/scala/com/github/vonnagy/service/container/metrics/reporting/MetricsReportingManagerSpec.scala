@@ -28,7 +28,9 @@ class MetricsReportingManagerSpec
 
     "be able to report it's health" in {
       probe.send(act, GetHealth)
-      probe.expectMsgClass(classOf[HealthInfo]) must beEqualTo(HealthInfo("metrics-reporting", HealthState.OK, "The system is currently managing 1 metrics reporters", Some(List("com.github.vonnagy.service.container.metrics.reporting.Slf4jReporter")), List()))
+      probe.expectMsgClass(classOf[HealthInfo]) must beEqualTo(HealthInfo("metrics-reporting",
+        HealthState.OK, "The system is currently managing 1 metrics reporters",
+        Some(List("com.github.vonnagy.service.container.metrics.reporting.Slf4jReporter")), List()))
     }
 
     "be able to stop the running reporters" in {

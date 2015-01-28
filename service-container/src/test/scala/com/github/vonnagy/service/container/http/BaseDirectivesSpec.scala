@@ -47,7 +47,8 @@ class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2Ro
       }
 
       Get("/app-json").withHeaders(Accept(`text/plain`)) ~> route ~> check {
-        rejection === UnacceptedResponseContentTypeRejection(Seq(ContentType(`application/json`), ContentType(`application/vnd.com.github.vonnagy.container.health-v1+json`)))
+        rejection === UnacceptedResponseContentTypeRejection(Seq(ContentType(`application/json`),
+          ContentType(`application/vnd.com.github.vonnagy.container.health-v1+json`)))
       }
     }
   }

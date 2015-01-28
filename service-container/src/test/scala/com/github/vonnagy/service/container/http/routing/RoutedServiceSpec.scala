@@ -3,7 +3,6 @@ package com.github.vonnagy.service.container.http.routing
 import akka.actor.ActorDSL._
 import akka.actor._
 import akka.testkit.{TestActorRef, TestProbe}
-import com.github.vonnagy.service.container.TestEndpoints
 import com.github.vonnagy.service.container.http.RejectionResponse
 import org.specs2.mutable.Specification
 import spray.http._
@@ -15,12 +14,14 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
   def echoComplete[T]: T => Route = { x ⇒ complete(x.toString) }
 
   val svcAct = actor("service")(new Act {
-    become { case _ => }
+    become { case _ =>}
   })
 
   val testRoute = new RoutedEndpoints {
     def route = {
-      path("test") { complete("test") }
+      path("test") {
+        complete("test")
+      }
     }
   }
 
@@ -41,7 +42,9 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
       // This should create the actor and register the endpoints
       val r = new RoutedEndpoints {
         def route = {
-          path("test2") { complete("test2") }
+          path("test2") {
+            complete("test2")
+          }
         }
       }
 
@@ -61,7 +64,13 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
 
       val postRoute = new RoutedEndpoints {
         def route = {
-          post { path("test3") { entity(as[TestEntity]) { echoComplete } } }
+          post {
+            path("test3") {
+              entity(as[TestEntity]) {
+                echoComplete
+              }
+            }
+          }
         }
       }
 
@@ -82,7 +91,9 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
 
       val postRoute = new RoutedEndpoints {
         def route = {
-          get { path("test4") { ctx => throw new Exception("test") } }
+          get {
+            path("test4") { ctx => throw new Exception("test")}
+          }
         }
       }
 

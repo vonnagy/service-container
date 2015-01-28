@@ -1,10 +1,8 @@
-import akka.actor.{ActorRefFactory, ActorSystem, Props}
+import akka.actor.{ActorRefFactory, ActorSystem}
 import com.github.vonnagy.service.container.ContainerBuilder
-import com.github.vonnagy.service.container.http.DefaultMarshallers
 import com.github.vonnagy.service.container.http.routing._
-import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.typesafe.config.ConfigFactory
-import spray.http.{MediaTypes, StatusCodes}
+import spray.http.MediaTypes._
 
 /**
  * An example use of a basic REST service. This can be run without any additional
@@ -18,10 +16,10 @@ object RestHttpSample extends App {
   val service = new ContainerBuilder()
     // Add a config to override the host and port
     .withConfig(ConfigFactory.parseString(
-      """
+    """
         container.http.interface = "localhost"
         container.http.port = "9092"
-      """.stripMargin))
+    """.stripMargin))
     // Add some endpoints
     .withRoutes(classOf[ProductEndpoints]).build
 
@@ -29,9 +27,6 @@ object RestHttpSample extends App {
 
   // A product entity
   case class Product(id: Option[Int], name: String)
-
-  // A message sent to the handler
-  case class GetProduct(id: Option[Int]) extends RestRequest
 
   class ProductEndpoints(implicit system: ActorSystem,
                          actorRefFactory: ActorRefFactory) extends RoutedEndpoints {
@@ -42,49 +37,36 @@ object RestHttpSample extends App {
 
     val route = {
       pathPrefix("products") {
-        get {
-          pathEnd {
+        pathEndOrSingleSlash {
+          get {
             // This is a path like ``http://api.somecompany.com/products`` and will fetch all of the products
-            respondWithMediaType(MediaTypes.`application/json`) {
-              compressResponseIfRequested() {
-                ctx =>
-                  // Push the handling to another context so that we don't block
-                  perRequest[Seq[Product]](ctx, Props(new ProductHandler), GetProduct(None))
-              }
+            respondWithMediaType(`application/json`) {
+              complete(Seq(Product(Some(1001), "Widget 1"), Product(Some(1002), "Widget 2")))
             }
           } ~
-            path(IntNumber) { productId =>
-              acceptableMediaTypes(MediaTypes.`application/json`) {
-                // This is the path like ``http://api.somecompany.com/products/1001`` and will fetch the specified product
-                respondWithMediaType(MediaTypes.`application/json`) {
-                  ctx =>
-                    // Push the handling to another context so that we don't block
-                    perRequest[Product](ctx, Props(new ProductHandler), GetProduct(Some(productId)))
-                }
+          post {
+            // Simulate the creation of a product. This call is handled in-line and not through the per-request handler.
+            entity(as[Product]) { product =>
+              respondWithMediaType(`application/json`) {
+                complete(Product(Some(1001), product.name))
               }
             }
+          }
         } ~
-        post {
-          // Simulate the creation of a product. This call is handled in-line and not through the per-request handler.
-          entity(as[Product]) { product =>
-            complete(Product(Some(1001), product.name))
+        path(IntNumber) { productId =>
+          get {
+            acceptableMediaTypes(`application/json`) {
+              // This is the path like ``http://api.somecompany.com/products/1001`` and will fetch the specified product
+              respondWithMediaType(`application/json`) {
+                // Push the handling to another context so that we don't block
+                complete(Product(Some(productId), "Widget 1"))
+              }
+            }
           }
         }
+
       }
     }
   }
-
-  class ProductHandler extends PerRequestHandler with ActorLoggingAdapter {
-    def receive = {
-      case GetProduct(Some(id)) =>
-        // Return a specific product
-        response(Product(Some(id), "Widget 1"), StatusCodes.OK)
-      case GetProduct(None) =>
-        // Return all products
-        response(Seq(Product(Some(1001), "Widget 1"), Product(Some(1002), "Widget 2")), StatusCodes.OK)
-
-    }
-  }
-
 
 }

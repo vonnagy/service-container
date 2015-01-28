@@ -60,7 +60,7 @@ with HttpService with RegisteredHealthCheckActor with Stash {
    * @return
    */
   def running = httpStopping orElse ({
-    case StatusRunning => sender ! true
+    case StatusRunning => sender.tell(true, self)
 
     case GetHealth =>
       sender ! HealthInfo("services", HealthState.OK,
@@ -75,7 +75,7 @@ with HttpService with RegisteredHealthCheckActor with Stash {
    * @return
    */
   def stopped = {
-    case StatusRunning => sender ! false
+    case StatusRunning => sender.tell(false, self)
 
     case GetHealth =>
       sender ! HealthInfo("services", HealthState.CRITICAL,
