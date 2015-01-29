@@ -69,11 +69,8 @@ object Publish {
             <email>ivan@vonnagy.net</email>
           </developer>
         </developers>
-      ),
+      )
 
-    licenses := Seq("Apache License, Version 2.0" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.html")),
-
-    homepage := Some(url("https://github.com/vonnagy/service-container"))
 
   )
 
