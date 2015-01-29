@@ -18,7 +18,7 @@ trait CoreConfig {
       // exists within a conf directory under the application context
       case null if new File("conf/application.conf").exists => ConfigFactory.load("conf/application.conf")
       // Load the default
-      case null => ConfigFactory.load("container")
+      case null => ConfigFactory.load()
       // If there is a system property for the file then use that
       case f => ConfigFactory.parseFile(new File(f))
     }
