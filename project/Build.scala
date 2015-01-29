@@ -15,7 +15,7 @@ object Build extends sbt.Build {
 
     organization := "com.github.vonnagy",
 
-    version := "1.0.0",
+    version := "1.0.1-SNAPSHOT",
 
     description := "Service Container",
 
