@@ -18,6 +18,12 @@ There are a few sub-projects in this repository and here is a list of those curr
 There are several aspects to utilizing the functionality contained within the Service Container and it's supporting libraries. This
 section outlines the available functionality and how to best utilize the framework.
 
+### Configuration
+As with any framework, it is important to allow custom configuration. The Service Container supports enhanced
+configuration and follow the standard [Typesafe Config](https://github.com/typesafehub/config) rollup patterns.
+
+[Instructions](docs/Configuration.md)
+
 ### Builtin Service Container endpoints
 
 In order to allow our internal users and systems to self-discover the health of services, the Service Container will
