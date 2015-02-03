@@ -4,7 +4,7 @@ Service Container
 [![Build Status](https://travis-ci.org/vonnagy/service-container.png?branch=master)](https://travis-ci.org/vonnagy/service-container)
 [![Coverage Status](https://coveralls.io/repos/vonnagy/service-container/badge.svg?branch=master)](https://coveralls.io/r/vonnagy/service-container?branch=master)
 
-The service container is a lightweight framework that provides the ability to build micro-services. It contains a built-in Http server and utilizes both [Akka](http://akka.io/) and [Spray](http://spray.io/) at it's core.
+The service container is a lightweight framework that provides the ability to build microservices. It contains a built-in Http server and utilizes both [Akka](http://akka.io/) and [Spray](http://spray.io/) at it's core.
 The service container is fully SaaS ready as it provides functionality for recording metrics and for tracking the health of your service.
 
 There are a few sub-projects in this repository and here is a list of those currently available.

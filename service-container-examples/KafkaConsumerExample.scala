@@ -6,7 +6,7 @@ import com.sclasen.akka.kafka.{AkkaConsumer, AkkaConsumerProps, StreamFSM}
 import kafka.serializer.DefaultDecoder
 
 /**
- * This is an example of how to use the container for a micro-service that is a consumer of Kafka messages.
+ * This is an example of how to use the container for a microservice that is a consumer of Kafka messages.
  * The example does NOT run standalone as it is an example and depends on an environment where this a running
  * Zookeeper and Kafka instances.
  * See https://github.com/sclasen/akka-kafka for more information on the consumer.
