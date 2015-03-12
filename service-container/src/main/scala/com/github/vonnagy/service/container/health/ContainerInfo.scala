@@ -29,13 +29,14 @@ object ContainerInfo extends LoggingAdapter {
    */
   private[health] def getHostInternal: String = {
     try {
-      return InetAddress.getLocalHost.getHostName.split("\\.")(0)
+      InetAddress.getLocalHost.getHostName.split("\\.")(0)
     }
     catch {
       case ex: Exception => {
       }
     }
-    return "Unknown"
+
+    "Unknown"
   }
 
   /**
@@ -45,12 +46,12 @@ object ContainerInfo extends LoggingAdapter {
   private[health] def getApplicationInfo: Tuple2[String, String] = {
     if (mainClass.isDefined) {
       val man: Manifest = getManifest(mainClass.get)
-      return Tuple2[String, String](man.getMainAttributes.getValue(Name.IMPLEMENTATION_TITLE),
+      Tuple2[String, String](man.getMainAttributes.getValue(Name.IMPLEMENTATION_TITLE),
         man.getMainAttributes.getValue("Implementation-Version") + "." +
           man.getMainAttributes.getValue("Implementation-Build"))
     }
     else {
-      return Tuple2[String, String]("Container Service", "1.0.0.N/A")
+      Tuple2[String, String]("Container Service", "1.0.0.N/A")
     }
   }
 
@@ -61,20 +62,24 @@ object ContainerInfo extends LoggingAdapter {
   private[health] def getMainClass: Option[Class[_]] = {
     import scala.collection.JavaConversions._
 
-    for (currStack <- Thread.getAllStackTraces.values if currStack.length > 0) {
-      val lastElem = currStack(currStack.length - 1)
-      if (lastElem.getMethodName == "main") {
-        try {
-          return Option.some(Class.forName(lastElem.getClassName))
-        }
-        catch {
-          case e: ClassNotFoundException => {
-            e.printStackTrace
-          }
-        }
+    def checkStack(elem: StackTraceElement): Option[Class[_]] = try {
+      if (elem.getMethodName.equals("main")) Some(Class.forName(elem.getClassName)) else None
+    } catch {
+      case e: ClassNotFoundException => {
+        // Swallow the exception
+        None
       }
     }
-    return Option.none
+
+    Thread.getAllStackTraces.values.flatMap(currStack => {
+      if (!currStack.isEmpty)
+        checkStack(currStack.last)
+      else
+        None
+    }).headOption match {
+      case None => None
+      case c => c
+    }
   }
 
   private[health] def getManifest(clazz: Class[_]): Manifest = {
@@ -82,14 +87,14 @@ object ContainerInfo extends LoggingAdapter {
 
     try {
       if (file.endsWith(".jar")) {
-        return new JarFile(file).getManifest
+        new JarFile(file).getManifest
       }
       else {
         val manifest: Manifest = new Manifest
         manifest.getMainAttributes.put(Name.IMPLEMENTATION_TITLE, "Container Service")
         manifest.getMainAttributes.put(Name.IMPLEMENTATION_VERSION, "1.0.0")
         manifest.getMainAttributes.put(new Attributes.Name("Implementation-Build"), "N/A")
-        return manifest
+        manifest
       }
     }
     catch {
@@ -98,7 +103,7 @@ object ContainerInfo extends LoggingAdapter {
         manifest.getMainAttributes.put(Name.IMPLEMENTATION_TITLE, "Container Service")
         manifest.getMainAttributes.put(Name.IMPLEMENTATION_VERSION, "1.0.0")
         manifest.getMainAttributes.put(new Attributes.Name("Implementation-Build"), "N/A")
-        return manifest
+        manifest
       }
     }
   }
