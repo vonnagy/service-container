@@ -4,11 +4,11 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import metrics_influxdb.{InfluxdbReporter, Influxdb}
+import metrics_influxdb.{Influxdb, InfluxdbReporter}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationLike
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 /**
  * Created by Ivan von Nagy on 1/21/15.

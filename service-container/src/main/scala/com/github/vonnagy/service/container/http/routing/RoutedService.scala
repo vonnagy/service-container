@@ -51,7 +51,7 @@ class RoutedService(val routeEndpoints: Seq[RoutedEndpoints]) extends Actor
   }
 
   // The default receive is the base with the services
-  def receive = base orElse applyRoute(buildRoute(routes))
+  def receive = applyRoute(buildRoute(routes)) orElse base
 
   /**
    * Build the routes from sequence of ``RoutedEndpoints``

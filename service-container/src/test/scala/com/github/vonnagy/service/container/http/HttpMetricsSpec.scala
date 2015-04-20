@@ -59,8 +59,7 @@ class HttpMetricsSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
 
     "schedule and cancel the metrics job" in {
       metrics.metricsJob must beNone
-      metrics.scheduleHttpMetrics(FiniteDuration(500, TimeUnit.MILLISECONDS))
-      Thread.sleep(1000)
+      metrics.scheduleHttpMetrics(FiniteDuration(100, TimeUnit.MILLISECONDS))
       metrics.metricsJob must not beNone
 
       metrics.cancelHttpMetrics
@@ -69,7 +68,7 @@ class HttpMetricsSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
 
     "schedule and fetch the metrics" in {
       metrics.metricsJob must beNone
-      metrics.scheduleHttpMetrics(FiniteDuration(500, TimeUnit.MILLISECONDS))
+      metrics.scheduleHttpMetrics(FiniteDuration(100, TimeUnit.MILLISECONDS))
       Thread.sleep(1000)
 
       metrics.cancelHttpMetrics

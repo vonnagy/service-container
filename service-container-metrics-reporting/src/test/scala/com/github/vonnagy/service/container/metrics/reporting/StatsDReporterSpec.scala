@@ -9,7 +9,7 @@ import com.typesafe.config.ConfigFactory
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationLike
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 /**
  * Created by Ivan von Nagy on 1/21/15.

@@ -2,15 +2,16 @@ package com.github.vonnagy.service.container.health
 
 import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import org.specs2.mutable.SpecificationLike
-import org.specs2.time.NoTimeConversions
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class HealthProviderSpec extends AkkaTestkitSpecs2Support with SpecificationLike with NoTimeConversions {
+class HealthProviderSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
 
   sequential
   val sys = system
+
+  import system.dispatcher
 
   "The HealthProvider" should {
 

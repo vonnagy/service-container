@@ -3,11 +3,11 @@ import sbt._
 
 object Build extends sbt.Build {
 
-  val AKKA_VERSION = "2.3.8"
-  val SPRAY_VERSION = "1.3.1"
+  val AKKA_VERSION = "2.3.9"
+  val SPRAY_VERSION = "1.3.3"
   val CONFIG_VERSION = "1.2.1"
-  val METRICS_VERSION = "3.1.0"
-  val LIFT_VERSION = "2.5.1"
+  val METRICS_VERSION = "3.1.1"
+  val LIFT_VERSION = "2.6.2"
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
 
@@ -19,7 +19,8 @@ object Build extends sbt.Build {
 
     description := "Service Container",
 
-    scalaVersion := "2.10.4",
+    scalaVersion := "2.11.6",
+    crossScalaVersions := Seq("2.10.5", "2.11.6"),
 
     scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8"),
 
@@ -27,28 +28,31 @@ object Build extends sbt.Build {
 
     logLevel := Level.Info,
 
+    resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
+
     libraryDependencies ++= {
       Seq(
-        "io.spray"              % "spray-can"         % SPRAY_VERSION,
-        "io.spray"              % "spray-http"        % SPRAY_VERSION,
-        "io.spray"              % "spray-httpx"       % SPRAY_VERSION,
-        "io.spray"              % "spray-routing"     % SPRAY_VERSION,
-        "com.typesafe"          % "config"            % CONFIG_VERSION,
-        "com.typesafe.akka"     %% "akka-actor"       % AKKA_VERSION exclude ("org.scala-lang" , "scala-library"),
-        "com.typesafe.akka"     %% "akka-slf4j"       % AKKA_VERSION exclude ("org.slf4j", "slf4j-api") exclude ("org.scala-lang" , "scala-library"),
-        "org.slf4j"             % "slf4j-api"         % "1.7.5",
-        "ch.qos.logback"        % "logback-classic"   % "1.0.13",
-        "org.slf4j"             % "log4j-over-slf4j"  % "1.7.5",
-        "net.liftweb"           %% "lift-json"        % LIFT_VERSION,
-        "net.liftweb"           %% "lift-json-ext"    % LIFT_VERSION exclude ("org.scala-lang" , "scala-compiler"),
-        "io.dropwizard.metrics" % "metrics-core"      % METRICS_VERSION,
-        "io.dropwizard.metrics" % "metrics-jvm"       % METRICS_VERSION,
-        "joda-time"             % "joda-time"         % "2.6",
-        "com.typesafe.akka"     %% "akka-testkit"     % AKKA_VERSION    % "test",
-        "io.spray"              % "spray-testkit"     % SPRAY_VERSION   % "test",
-        "junit"                 % "junit"             % "4.12"          % "test",
-        "org.specs2"            %% "specs2-core"      % "2.4.15"        % "test",
-        "org.scalamock"         %% "scalamock-specs2-support" % "3.2.1" % "test" exclude("org.specs2", "specs2")
+        "io.spray"              %%  "spray-can"         % SPRAY_VERSION,
+        "io.spray"              %%  "spray-http"        % SPRAY_VERSION,
+        "io.spray"              %%  "spray-httpx"       % SPRAY_VERSION,
+        "io.spray"              %%  "spray-routing"     % SPRAY_VERSION,
+        "com.typesafe"          %   "config"            % CONFIG_VERSION,
+        "com.typesafe.akka"     %%  "akka-actor"        % AKKA_VERSION exclude ("org.scala-lang" , "scala-library"),
+        "com.typesafe.akka"     %%  "akka-slf4j"        % AKKA_VERSION exclude ("org.slf4j", "slf4j-api") exclude ("org.scala-lang" , "scala-library"),
+        "org.slf4j"             %   "slf4j-api"         % "1.7.12",
+        "ch.qos.logback"        %   "logback-classic"   % "1.1.3",
+        "org.slf4j"             %   "log4j-over-slf4j"  % "1.7.12",
+        "net.liftweb"           %%  "lift-json"         % LIFT_VERSION,
+        "net.liftweb"           %%  "lift-json-ext"     % LIFT_VERSION exclude ("org.scala-lang" , "scala-compiler"),
+        "io.dropwizard.metrics" %   "metrics-core"      % METRICS_VERSION,
+        "io.dropwizard.metrics" %   "metrics-jvm"       % METRICS_VERSION,
+        "joda-time"             %   "joda-time"         % "2.7",
+        "com.typesafe.akka"     %%  "akka-testkit"      % AKKA_VERSION    % "test",
+        "io.spray"              %%  "spray-testkit"     % SPRAY_VERSION   % "test",
+        "junit"                 %   "junit"             % "4.12"          % "test",
+        "org.scalaz.stream"     %%  "scalaz-stream"     % "0.7a"          % "test",
+        "org.specs2"            %%  "specs2-core"       % "3.5"           % "test",
+        "org.specs2"            %%  "specs2-mock"       % "3.5"           % "test"
       )
     }
   )
@@ -59,7 +63,7 @@ object Build extends sbt.Build {
   val exampleSettings = Seq(
     name := "service-container-examples",
     libraryDependencies ++= Seq(
-      "com.sclasen" %% "akka-kafka" % "0.0.10")
+      "com.sclasen" %% "akka-kafka" % "0.1.0")
   ) ++ Test.settings
 
   val metricsReportingSettings = Seq(

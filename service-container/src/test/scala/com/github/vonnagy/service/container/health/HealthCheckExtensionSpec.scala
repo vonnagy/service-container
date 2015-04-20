@@ -21,6 +21,8 @@ class HealthCheckExtensionSpec extends AkkaTestkitSpecs2Support with Specificati
     }
 
     "allow for addition and fetch of checks" in {
+      import system.dispatcher
+
       val ext = Health(system)
       ext must not be null
       ext.addCheck(new HealthCheck {

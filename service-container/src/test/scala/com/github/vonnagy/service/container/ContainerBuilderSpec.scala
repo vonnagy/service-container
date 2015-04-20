@@ -1,12 +1,12 @@
 package com.github.vonnagy.service.container
 
+import com.github.vonnagy.service.container.health.{HealthCheck, HealthInfo, HealthState}
 import org.specs2.mutable.Specification
-import org.specs2.time.NoTimeConversions
-import com.github.vonnagy.service.container.health.{HealthState, HealthInfo, HealthCheck}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ContainerBuilderSpec extends Specification with NoTimeConversions {
+class ContainerBuilderSpec extends Specification {
 
   sequential
 

@@ -8,7 +8,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationLike
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 /**
  * Created by Ivan von Nagy on 1/14/15.
@@ -32,8 +32,8 @@ class ScheduledReporterSpec extends AkkaTestkitSpecs2Support with SpecificationL
 
     "provide container and application information" in {
       val rpt = spy(new TestReporter)
-      rpt.application must be equalTo("Container Service")
-      rpt.version must be equalTo("1.0.0.N/A")
+      rpt.application must be equalTo ("Container Service")
+      rpt.version must be equalTo ("1.0.0.N/A")
       rpt.host must not be equalTo("")
     }
 
