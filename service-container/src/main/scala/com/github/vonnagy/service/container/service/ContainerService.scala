@@ -20,7 +20,7 @@ import scala.concurrent.duration._
  * @param config an optional configuration to use. It will tak precedence over those pass from the command line or
  *               from the default.
  */
-protected class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
+class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
                                  healthChecks: Seq[HealthCheck] = Nil,
                                  props: Seq[Tuple2[String, Props]] = Nil,
                                  config: Option[Config] = None) extends CoreConfig with SystemShutdown with LoggingAdapter {
