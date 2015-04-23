@@ -39,6 +39,7 @@ object Build extends sbt.Build {
         "com.typesafe"          %   "config"            % CONFIG_VERSION,
         "com.typesafe.akka"     %%  "akka-actor"        % AKKA_VERSION exclude ("org.scala-lang" , "scala-library"),
         "com.typesafe.akka"     %%  "akka-slf4j"        % AKKA_VERSION exclude ("org.slf4j", "slf4j-api") exclude ("org.scala-lang" , "scala-library"),
+        "com.typesafe.akka"     %%  "akka-remote"       % AKKA_VERSION exclude ("org.slf4j", "slf4j-api") exclude ("org.scala-lang" , "scala-library"),
         "org.slf4j"             %   "slf4j-api"         % "1.7.12",
         "ch.qos.logback"        %   "logback-classic"   % "1.1.3",
         "org.slf4j"             %   "log4j-over-slf4j"  % "1.7.12",

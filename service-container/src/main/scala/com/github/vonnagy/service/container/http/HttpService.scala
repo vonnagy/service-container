@@ -9,7 +9,9 @@ import akka.routing.FromConfig
 import akka.util.Timeout
 import com.github.vonnagy.service.container.health.{HealthEndpoints, HealthInfo, HealthState}
 import com.github.vonnagy.service.container.http.routing.{RoutedEndpoints, RoutedService}
+import com.github.vonnagy.service.container.http.security.SSLProvider
 import com.github.vonnagy.service.container.metrics.MetricsEndpoints
+import com.typesafe.config.ConfigFactory
 import spray.can.Http
 import spray.can.server.ServerSettings
 import spray.routing.RouteConcatenation
@@ -25,7 +27,7 @@ case class HttpStopped()
  * The main Http REST service. It handles the Http server and also setups the registered
  * endpoints.
  */
-trait HttpService extends RouteConcatenation with HttpMetrics {
+trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
   this: Actor =>
 
   implicit def system = context.system
@@ -33,11 +35,14 @@ trait HttpService extends RouteConcatenation with HttpMetrics {
   val httpInterface: String
   val port: Int
 
-  private val spSettings = ServerSettings(context.system.settings.config)
+  // Load the server settings and override the spray SSL setting based on what our
+  // setting is
+  private val spSettings = ServerSettings(ConfigFactory.parseString(s"""spray.can.server.ssl-encryption=${this.sslSettings.enabled}""")
+    .withFallback(context.system.settings.config))
+
   private val httpServer = IO(Http)
 
   val httpListener = context.system.actorSelection(httpServer.path.toString.concat("/listener-0"))
-
   var httpBound = false
 
   val httpStarting: Receive = {
@@ -75,10 +80,12 @@ trait HttpService extends RouteConcatenation with HttpMetrics {
     // initially to need to tell it where to bind to
     log.info(s"Trying to bind to $httpInterface:$port")
 
-    httpServer ! Http.Bind(listener = httpService,
+    val bind = Http.Bind(listener = httpService,
       interface = httpInterface,
       port = port,
       settings = Some(spSettings))
+
+    httpServer ! bind
   }
 
   /**

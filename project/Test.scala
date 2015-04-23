@@ -12,6 +12,9 @@ object Test {
     // Don't run the tests in parallel
     parallelExecution in sbt.Test := false,
 
+    // Don't package test jars since it does not handle resources properly
+    exportJars := false,
+
     // Setup the system to run Scalastyle when running tests
     testScalastyle := org.scalastyle.sbt.ScalastylePlugin.scalastyle.in(sbt.Test).toTask("").value,
     (test in sbt.Test) <<= (test in sbt.Test) dependsOn testScalastyle,

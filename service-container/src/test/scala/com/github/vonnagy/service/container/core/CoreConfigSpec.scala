@@ -1,14 +1,26 @@
 package com.github.vonnagy.service.container.core
 
 import java.nio.file.Files
-import org.specs2.mutable.Specification
+
 import com.typesafe.config.ConfigFactory
+import org.specs2.mutable.Specification
 
 class CoreConfigSpec extends Specification {
 
   sequential
 
   "The config code" should {
+
+    "Load the default configuration" in {
+      val config = new CoreConfig {}.getConfig(None)
+      config.getInt("container.http.port") must be equalTo 8080
+    }
+
+    "Use a passed config as the top level configuration" in {
+
+      val config = new CoreConfig {}.getConfig(Some(ConfigFactory.parseString("container.http.port=9000")))
+      config.getInt("container.http.port") must be equalTo 9000
+    }
 
     "Parse an external file when set through a system property" in {
 
@@ -28,15 +40,5 @@ class CoreConfigSpec extends Specification {
 
     }
 
-    "Load the default configuration" in {
-      val config = new CoreConfig {}.getConfig(None)
-      config.getInt("container.http.port") must be equalTo 8080
-    }
-
-    "Use a passed config as the top level configuration" in {
-
-      val config = new CoreConfig {}.getConfig(Some(ConfigFactory.parseString("container.http.port=9000")))
-      config.getInt("container.http.port") must be equalTo 9000
-    }
   }
 }
