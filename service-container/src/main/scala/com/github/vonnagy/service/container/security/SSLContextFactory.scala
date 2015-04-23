@@ -1,3 +1,8 @@
+/**
+ * The work in this class was taken from the code in akka.remote.transport.netty.NettySSLSupport
+ * under the Apache 2 license for Typesafe's Akka
+ */
+
 package com.github.vonnagy.service.container.security
 
 import java.io.{FileNotFoundException, IOException}
