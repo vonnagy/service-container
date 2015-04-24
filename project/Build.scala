@@ -72,33 +72,35 @@ object Build extends sbt.Build {
     libraryDependencies ++= Seq(
       "com.github.jjagged" % "metrics-statsd" % "1.0.0" exclude("com.codahale.metrics", "metrics"),
       "com.novaquark" % "metrics-influxdb" % "0.3.0" exclude("com.codahale.metrics", "metrics"))
-   )
-
-  val noPublishing = Seq(
-    publish := (),
-    publishLocal := (),
-    // required until these tickets are closed https://github.com/sbt/sbt-pgp/issues/42,
-    // https://github.com/sbt/sbt-pgp/issues/36
-    publishTo := None
   )
 
-  lazy val root = Project(id="root", base=file("."))
-    .settings(noPublishing:_*)
+  val noPublishing = Seq(
+    publish := {},
+    publishLocal := {},
+    publishArtifact := false,
+    // required until these tickets are closed https://github.com/sbt/sbt-pgp/issues/42,
+    // https://github.com/sbt/sbt-pgp/issues/36
+    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+  )
+
+  lazy val root = Project(id = "root", base = file("."))
+    .settings(noPublishing: _*)
     .aggregate(core, metricsReporting, examples)
+
 
   lazy val core = Project(id = "service-container", base = file("service-container"))
     .settings(standardSettings: _*)
     .settings(name := "service-container")
 
   lazy val metricsReporting = Project(id = "service-container-metrics-reporting", base = file("service-container-metrics-reporting"))
-    .settings(standardSettings:_*)
-    .settings(metricsReportingSettings:_*)
+    .settings(standardSettings: _*)
+    .settings(metricsReportingSettings: _*)
     .dependsOn(core)
 
   lazy val examples: Project = Project(id = "service-container-examples", base = file("service-container-examples"))
-    .settings(noPublishing:_*)
-    .settings(commonSettings:_*)
-    .settings(exampleSettings:_*)
+    .settings(noPublishing: _*)
+    .settings(commonSettings: _*)
+    .settings(exampleSettings: _*)
     .dependsOn(core)
 
 
