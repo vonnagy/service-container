@@ -3,10 +3,10 @@ import sbt._
 
 object Build extends sbt.Build {
 
-  val AKKA_VERSION = "2.3.9"
+  val AKKA_VERSION = "2.3.11"
   val SPRAY_VERSION = "1.3.3"
-  val CONFIG_VERSION = "1.2.1"
-  val METRICS_VERSION = "3.1.1"
+  val CONFIG_VERSION = "1.3.0"
+  val METRICS_VERSION = "3.1.2"
   val LIFT_VERSION = "2.6.2"
 
   lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
@@ -47,13 +47,13 @@ object Build extends sbt.Build {
         "net.liftweb"           %%  "lift-json-ext"     % LIFT_VERSION exclude ("org.scala-lang" , "scala-compiler"),
         "io.dropwizard.metrics" %   "metrics-core"      % METRICS_VERSION,
         "io.dropwizard.metrics" %   "metrics-jvm"       % METRICS_VERSION,
-        "joda-time"             %   "joda-time"         % "2.7",
+        "joda-time"             %   "joda-time"         % "2.8.1",
         "com.typesafe.akka"     %%  "akka-testkit"      % AKKA_VERSION    % "test",
         "io.spray"              %%  "spray-testkit"     % SPRAY_VERSION   % "test",
         "junit"                 %   "junit"             % "4.12"          % "test",
-        "org.scalaz.stream"     %%  "scalaz-stream"     % "0.7a"          % "test",
-        "org.specs2"            %%  "specs2-core"       % "3.5"           % "test",
-        "org.specs2"            %%  "specs2-mock"       % "3.5"           % "test"
+        "org.scalaz.stream"     %%  "scalaz-stream"     % "0.7.1"         % "test",
+        "org.specs2"            %%  "specs2-core"       % "3.6.1"         % "test",
+        "org.specs2"            %%  "specs2-mock"       % "3.6.1"         % "test"
       )
     }
   )
