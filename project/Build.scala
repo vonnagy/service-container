@@ -9,26 +9,41 @@ object Build extends sbt.Build {
   val METRICS_VERSION = "3.1.2"
   val LIFT_VERSION = "2.6.2"
 
-  lazy val commonSettings = Defaults.coreDefaultSettings ++ Seq(
+  lazy val buildSettings = Seq(
+    name := "Service Container",
+    organization := "com.github.vonnagy",
+    version := "1.0.2-SNAPSHOT",
+    description := "Service Container",
+    scalaVersion := "2.11.6",
+    crossScalaVersions := Seq("2.10.5", "2.11.6")
+  )
+
+  override lazy val settings = super.settings ++ buildSettings
+
+  lazy val parentSettings = buildSettings ++ Seq(
+    publish := {},
+    publishLocal := {},
+    publishArtifact := false,
+    // required until these tickets are closed https://github.com/sbt/sbt-pgp/issues/42,
+    // https://github.com/sbt/sbt-pgp/issues/36
+    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+  )
+
+  lazy val defaultSettings = Seq(
 
     compile <<= (compile in Compile) dependsOn (compile in sbt.Test),
 
-    organization := "com.github.vonnagy",
-
-    version := "1.0.2-SNAPSHOT",
-
-    description := "Service Container",
-
-    scalaVersion := "2.11.6",
-    crossScalaVersions := Seq("2.10.5", "2.11.6"),
-
     scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8"),
 
-    javacOptions ++= Seq("-source", "1.7", "-target", "1.7"),
+    javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
 
     logLevel := Level.Info,
 
-    resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
+    resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases"
+
+  )
+
+  lazy val dependencySettings = Seq(
 
     libraryDependencies ++= {
       Seq(
@@ -51,15 +66,14 @@ object Build extends sbt.Build {
         "com.typesafe.akka"     %%  "akka-testkit"      % AKKA_VERSION    % "test",
         "io.spray"              %%  "spray-testkit"     % SPRAY_VERSION   % "test",
         "junit"                 %   "junit"             % "4.12"          % "test",
-        "org.scalaz.stream"     %%  "scalaz-stream"     % "0.7.1"         % "test",
+        "org.scalaz.stream"     %%  "scalaz-stream"     % "0.7a"          % "test",
         "org.specs2"            %%  "specs2-core"       % "3.6.1"         % "test",
         "org.specs2"            %%  "specs2-mock"       % "3.6.1"         % "test"
       )
     }
   )
 
-  // Join the settings together
-  val standardSettings = commonSettings ++ Publish.settings ++ Test.settings
+  val standardSettings = defaultSettings ++ dependencySettings ++ Publish.settings ++ Test.settings
 
   val exampleSettings = Seq(
     name := "service-container-examples",
@@ -74,32 +88,23 @@ object Build extends sbt.Build {
       "com.novaquark" % "metrics-influxdb" % "0.3.0" exclude("com.codahale.metrics", "metrics"))
   )
 
-  val noPublishing = Seq(
-    publish := {},
-    publishLocal := {},
-    publishArtifact := false,
-    // required until these tickets are closed https://github.com/sbt/sbt-pgp/issues/42,
-    // https://github.com/sbt/sbt-pgp/issues/36
-    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
-  )
-
   lazy val root = Project(id = "root", base = file("."))
-    .settings(noPublishing: _*)
+    .settings(parentSettings)
     .aggregate(core, metricsReporting, examples)
 
 
   lazy val core = Project(id = "service-container", base = file("service-container"))
-    .settings(standardSettings: _*)
+    .settings(standardSettings)
     .settings(name := "service-container")
 
   lazy val metricsReporting = Project(id = "service-container-metrics-reporting", base = file("service-container-metrics-reporting"))
-    .settings(standardSettings: _*)
+    .settings(standardSettings)
     .settings(metricsReportingSettings: _*)
     .dependsOn(core)
 
   lazy val examples: Project = Project(id = "service-container-examples", base = file("service-container-examples"))
-    .settings(noPublishing: _*)
-    .settings(commonSettings: _*)
+    .settings(defaultSettings: _*)
+    .settings(dependencySettings: _*)
     .settings(exampleSettings: _*)
     .dependsOn(core)
 
