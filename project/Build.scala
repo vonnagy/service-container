@@ -35,7 +35,7 @@ object Build extends sbt.Build {
 
     scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8"),
 
-    javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
+    javacOptions ++= Seq("-source", "1.7", "-target", "1.7"),
 
     logLevel := Level.Info,
 
