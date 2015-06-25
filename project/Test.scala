@@ -7,13 +7,13 @@ object Test {
   // Create a default Scala style task to run with tests
   lazy val testScalastyle = taskKey[Unit]("testScalastyle")
 
-  lazy val settings = Seq[Def.Setting[_]](
+  lazy val testSettings = Seq(
 
     // Don't run the tests in parallel
     parallelExecution in sbt.Test := false,
 
     // Don't package test jars since it does not handle resources properly
-    exportJars := false,
+    exportJars in sbt.Test := false,
 
     // Setup the system to run Scalastyle when running tests
     testScalastyle := org.scalastyle.sbt.ScalastylePlugin.scalastyle.in(sbt.Test).toTask("").value,
@@ -26,7 +26,7 @@ object Test {
 
     ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := {
       if (scalaBinaryVersion.value == "2.10") false
-      else false
+      else true
     }
   )
 }

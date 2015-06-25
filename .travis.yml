@@ -4,7 +4,7 @@ scala:
 - 2.10.5
 script: sbt clean coverage test coverageAggregate
 jdk:
-- oraclejdk7
+- oraclejdk8
 notifications:
   email:
     recipients:
