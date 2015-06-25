@@ -1,12 +1,13 @@
 package com.github.vonnagy.service.container.http
 
 import org.specs2.mutable.Specification
+import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.Accept
 import spray.http.{MediaType, ContentType, MediaTypes}
 import spray.routing.{Route, UnacceptedResponseContentTypeRejection}
 import spray.testkit.Specs2RouteTest
 
-class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2RouteTest {
+class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2RouteTest with AfterAll {
 
   val `application/vnd.com.github.vonnagy.container.health-v1+json` = MediaType.custom(mainType = "application",
     subType = "vnd.com.github.vonnagy.container.health-v1+json",
@@ -73,5 +74,12 @@ class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2Ro
       mediaType === `text/plain`
     }
 
+  }
+
+  def afterAll = {
+    if (!system.isTerminated) {
+      system.shutdown
+      system.awaitTermination
+    }
   }
 }

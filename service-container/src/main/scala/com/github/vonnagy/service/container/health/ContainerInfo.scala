@@ -33,10 +33,9 @@ object ContainerInfo extends LoggingAdapter {
     }
     catch {
       case ex: Exception => {
+        "Unknown"
       }
     }
-
-    "Unknown"
   }
 
   /**

@@ -16,7 +16,7 @@ case class Counter(val name: String)(implicit val system: ActorSystem) extends M
   /**
    * Increment the counter by one
    */
-  def incr: Unit = incr(1)
+  def incr(): Unit = incr(1)
 
   def +(delta: Long): Counter = {
     this.incr(delta);
@@ -38,7 +38,7 @@ case class Counter(val name: String)(implicit val system: ActorSystem) extends M
    * Get the counters current value
    * @return
    */
-  def value: Long = delegate.getCount
+  def value(): Long = delegate.getCount
 
 }
 
@@ -78,7 +78,7 @@ case class Histogram(val name: String)(implicit val system: ActorSystem) extends
    * Gets the count of observations.
    * @return the observation count
    */
-  def count: Long = delegate.getCount
+  def count(): Long = delegate.getCount
 }
 
 case class Meter(val name: String)(implicit val system: ActorSystem) extends MetricName with Instrumented {
@@ -88,7 +88,7 @@ case class Meter(val name: String)(implicit val system: ActorSystem) extends Met
   /**
    * Mark the occurrence of an event.
    */
-  def mark: Unit = mark(1L)
+  def mark(): Unit = mark(1L)
 
   /**
    * Mark the occurrence of a given number of events.
@@ -114,7 +114,7 @@ case class Meter(val name: String)(implicit val system: ActorSystem) extends Met
    * Gets the count of observations.
    * @return the observation count
    */
-  def count: Long = delegate.getCount
+  def count(): Long = delegate.getCount
 }
 
 case class Timer(val name: String)(implicit val system: ActorSystem) extends MetricName with Instrumented {
@@ -151,5 +151,5 @@ case class Timer(val name: String)(implicit val system: ActorSystem) extends Met
    * Gets the count of observations.
    * @return the observation count
    */
-  def count: Long = delegate.getCount
+  def count(): Long = delegate.getCount
 }

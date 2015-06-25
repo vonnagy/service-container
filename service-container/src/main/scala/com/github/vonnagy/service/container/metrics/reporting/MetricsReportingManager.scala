@@ -32,13 +32,13 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
     case GetHealth => sender ! checkHealth
   }
 
-  override def preStart: Unit = {
+  override def preStart(): Unit = {
     // Start the defined reporters
     startReporters
   }
 
 
-  override def postStop: Unit = {
+  override def postStop(): Unit = {
     // Stop the running reporters
     stopReporters
   }
@@ -46,7 +46,7 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
   /**
    * Load the defined reporters
    */
-  private[reporting] def startReporters: Unit = {
+  private[reporting] def startReporters(): Unit = {
     try {
       val master = context.system.settings.config.getConfig("container.metrics.reporters");
 
@@ -85,12 +85,12 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
   /**
    * Stop the running reporters
    */
-  private[reporting] def stopReporters: Unit = {
+  private[reporting] def stopReporters(): Unit = {
     reporters.foreach(_.stop)
     reporters = Seq.empty[ScheduledReporter]
   }
 
-  private def checkHealth: HealthInfo = {
+  private def checkHealth(): HealthInfo = {
     if (reporters.length == 0) {
       HealthInfo("metrics-reporting", HealthState.OK, s"The system is currently not managing any metrics reporters")
     }

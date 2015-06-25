@@ -24,12 +24,12 @@ with HttpService with RegisteredHealthCheckActor with Stash {
   val httpInterface = context.system.settings.config.getString("container.http.interface")
   val port = context.system.settings.config.getInt("container.http.port")
 
-  override def preStart: Unit = {
+  override def preStart(): Unit = {
     // Start the Http server
     startHttpServer(routeEndpoints)
   }
 
-  override def postStop: Unit = {
+  override def postStop(): Unit = {
     stopHttpServer
   }
 
@@ -39,7 +39,7 @@ with HttpService with RegisteredHealthCheckActor with Stash {
    * This is the handler when the manager is initializing
    * @return
    */
-  def initializing = httpStarting orElse ({
+  def initializing = httpStarting orElse {
     case HttpStarted =>
       unstashAll()
       context.become(running)
@@ -53,13 +53,13 @@ with HttpService with RegisteredHealthCheckActor with Stash {
 
     case m => stash()
 
-  }: Receive)
+  }: Receive
 
   /**
    * This is the handler when the manager is running
    * @return
    */
-  def running = httpStopping orElse ({
+  def running = httpStopping orElse {
     case StatusRunning => sender.tell(true, self)
 
     case GetHealth =>
@@ -68,7 +68,7 @@ with HttpService with RegisteredHealthCheckActor with Stash {
 
     case HttpStopped => context.become(stopped)
 
-  }: Receive)
+  }: Receive
 
   /**
    * This is the handler when the manager is stopped
@@ -86,7 +86,7 @@ with HttpService with RegisteredHealthCheckActor with Stash {
   /**
    * Start the registered services
    */
-  private def startServices: Unit = {
+  private def startServices(): Unit = {
     // Start the metrics reporters
     context.actorOf(MetricsReportingManager.props())
 

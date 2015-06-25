@@ -32,7 +32,7 @@ abstract class ScheduledReporter {
   /**
    * Stop the scheduled metric reporting
    */
-  def stop: Unit = {
+  def stop(): Unit = {
     schedule.exists(_.cancel())
     schedule = None
   }

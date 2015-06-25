@@ -33,7 +33,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
    * Start the service which will start the build-in Http service and
    * instantiate all of the desired Actors, etc...
    */
-  def start: Unit = {
+  def start(): Unit = {
 
     if (!started && !system.isTerminated) {
       started = true
@@ -58,7 +58,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
    * This will shutdown the system and wait until it has completed
    * the shutdown process.
    */
-  def shutdown: Unit = {
+  def shutdown(): Unit = {
     if (started && !system.isTerminated) {
       shutdownActorSystem(system) {
         // Do nothing
@@ -71,12 +71,12 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
    * Get the system's registered endpoint handlers
    * @return a list of ``RoutedEndpoints``
    */
-  def registeredRoutes: Seq[Class[_ <: RoutedEndpoints]] = routeEndpoints
+  def registeredRoutes(): Seq[Class[_ <: RoutedEndpoints]] = routeEndpoints
 
   /**
    * Get the system's registered health checks
    * @return a list of ``HealthCheck``
    */
-  def registeredHealthChecks: Seq[HealthCheck] = if (started) Health(system).getChecks else healthChecks
+  def registeredHealthChecks(): Seq[HealthCheck] = if (started) Health(system).getChecks else healthChecks
 
 }

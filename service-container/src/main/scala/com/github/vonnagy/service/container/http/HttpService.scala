@@ -91,7 +91,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
   /**
    * Shutdown the Http server
    */
-  def stopHttpServer: Unit = {
+  def stopHttpServer(): Unit = {
     cancelHttpMetrics
     httpListener ! Http.Unbind
   }
@@ -100,7 +100,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
    * Get the health of the Http server
    * @return An instance of `HealthInfo`
    */
-  def getHttpHealth: HealthInfo = {
+  def getHttpHealth(): HealthInfo = {
     httpBound match {
       case true => HealthInfo("http", HealthState.OK, s"Currently connected on $httpInterface:$port")
       case false => HealthInfo("http", HealthState.CRITICAL, s"Currently not connected on $httpInterface:$port")

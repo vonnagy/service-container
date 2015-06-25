@@ -1,13 +1,14 @@
 package com.github.vonnagy.service.container.health
 
 import org.specs2.mutable.Specification
+import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.`Remote-Address`
 import spray.http._
 import spray.testkit.Specs2RouteTest
 
 import scala.concurrent.Future
 
-class HealthEndpointsSpec extends Specification with Specs2RouteTest {
+class HealthEndpointsSpec extends Specification with Specs2RouteTest with AfterAll {
 
   sequential
 
@@ -73,8 +74,10 @@ class HealthEndpointsSpec extends Specification with Specs2RouteTest {
 
   }
 
-  step {
-    system.shutdown
-    system.awaitTermination
+  def afterAll = {
+    if (!system.isTerminated) {
+      system.shutdown
+      system.awaitTermination
+    }
   }
 }

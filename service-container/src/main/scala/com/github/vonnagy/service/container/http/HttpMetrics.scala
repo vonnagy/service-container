@@ -53,12 +53,12 @@ private[http] trait HttpMetrics extends LoggingAdapter {
     metricsJob = Some(system.scheduler.schedule(interval, interval)(getMetrics))
   }
 
-  protected[http] def cancelHttpMetrics: Unit = {
+  protected[http] def cancelHttpMetrics(): Unit = {
     metricsJob.exists(_.cancel())
     metricsJob = None
   }
 
-  private def getMetrics: Unit = {
+  private def getMetrics(): Unit = {
 
     try {
       implicit val dis = system.dispatcher

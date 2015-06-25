@@ -45,7 +45,7 @@ class RoutedService(val routeEndpoints: Seq[RoutedEndpoints]) extends Actor
   private[routing] var routes = routeEndpoints
 
   // The base handler
-  def base: Receive = {
+  val base: Receive = {
     case AddRoute(route) => addRoute(route); sender ! RouteAdded
     case GetRoutes => sender ! Routes(routes.toSeq)
   }

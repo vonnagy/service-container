@@ -187,24 +187,24 @@ class MetricsWriter(registry: MetricRegistry) {
     val snapshot = metric.getSnapshot
 
     ("min" -> snapshot.getMin) ~
-      ("max" -> snapshot.getMax) ~
-      ("mean" -> snapshot.getMean) ~
-      ("median" -> snapshot.getMedian) ~
-      ("std_dev" -> snapshot.getStdDev) ~
-      ("p75" -> snapshot.get75thPercentile) ~
-      ("p95" -> snapshot.get95thPercentile) ~
-      ("p98" -> snapshot.get98thPercentile) ~
-      ("p99" -> snapshot.get99thPercentile) ~
-      ("p999" -> snapshot.get999thPercentile)
+    ("max" -> snapshot.getMax) ~
+    ("mean" -> snapshot.getMean) ~
+    ("median" -> snapshot.getMedian) ~
+    ("std_dev" -> snapshot.getStdDev) ~
+    ("p75" -> snapshot.get75thPercentile) ~
+    ("p95" -> snapshot.get95thPercentile) ~
+    ("p98" -> snapshot.get98thPercentile) ~
+    ("p99" -> snapshot.get99thPercentile) ~
+    ("p999" -> snapshot.get999thPercentile)
   }
 
   private def writeMeteredFields(metric: Metered): JObject = {
     ("unit" -> "events/second") ~
-      ("count" -> metric.getCount) ~
-      ("mean" -> metric.getMeanRate) ~
-      ("m1" -> metric.getOneMinuteRate) ~
-      ("m5" -> metric.getFiveMinuteRate) ~
-      ("m15", metric.getFifteenMinuteRate)
+    ("count" -> metric.getCount) ~
+    ("mean" -> metric.getMeanRate) ~
+    ("m1" -> metric.getOneMinuteRate) ~
+    ("m5" -> metric.getFiveMinuteRate) ~
+    ("m15" -> metric.getFifteenMinuteRate)
   }
 
   private def checkNan(num: AnyVal): JValue = {

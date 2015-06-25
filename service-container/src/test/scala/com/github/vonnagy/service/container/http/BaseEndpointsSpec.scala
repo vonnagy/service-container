@@ -1,12 +1,13 @@
 package com.github.vonnagy.service.container.http
 
 import org.specs2.mutable.Specification
+import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.`Remote-Address`
 import spray.http.{RemoteAddress, StatusCodes}
 import spray.routing.Directives
 import spray.testkit.Specs2RouteTest
 
-class BaseEndpointsSpec extends Specification with Directives with Specs2RouteTest {
+class BaseEndpointsSpec extends Specification with Directives with Specs2RouteTest with AfterAll {
 
   val endpoints = new BaseEndpoints
 
@@ -34,7 +35,7 @@ class BaseEndpointsSpec extends Specification with Directives with Specs2RouteTe
 
   }
 
-  step {
+  def afterAll = {
     if (!system.isTerminated) {
       system.shutdown
       system.awaitTermination

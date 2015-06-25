@@ -23,7 +23,7 @@ trait RoutedEndpointsActor extends RoutedEndpoints with Actor {
   /**
    * When the actor is first created it will register itself with the Http service
    */
-  protected def registerRoute: Unit = {
+  protected def registerRoute(): Unit = {
     context.system.actorSelection("user/service/http") ! Broadcast(AddRoute(this))
   }
 

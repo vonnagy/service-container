@@ -1,18 +1,20 @@
 package com.github.vonnagy.service.container.metrics.reporting
 
 import akka.actor.ActorSystem
-import akka.testkit.{TestActorRef, TestKit, TestProbe}
+import akka.testkit.{TestActorRef, TestProbe}
+import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState}
 import com.typesafe.config.ConfigFactory
 import org.specs2.mutable.SpecificationLike
+import org.specs2.specification.AfterAll
 
 /**
  * Created by Ivan von Nagy on 1/14/15.
  */
 class MetricsReportingManagerSpec
-  extends TestKit(ActorSystem("default",
-    ConfigFactory.parseString("container.metrics.reporters.Slf4j.enabled=on")))
-  with SpecificationLike {
+    extends AkkaTestkitSpecs2Support(ActorSystem("default",
+      ConfigFactory.parseString("container.metrics.reporters.Slf4j.enabled=on")))
+    with SpecificationLike {
 
   // Run in order
   sequential

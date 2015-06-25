@@ -25,7 +25,7 @@ class InfluxDbReporter(implicit val system: ActorSystem, val config: Config) ext
   /**
    * Stop the scheduled metric reporting
    */
-  override def stop: Unit = {
+  override def stop(): Unit = {
     super.stop
     if (influxDb != null) {
       influxDb
@@ -45,7 +45,7 @@ class InfluxDbReporter(implicit val system: ActorSystem, val config: Config) ext
       metrics.metricRegistry.getTimers())
   }
 
-  private[reporting] def getReporter: metrics_influxdb.InfluxdbReporter = {
+  private[reporting] def getReporter(): metrics_influxdb.InfluxdbReporter = {
 
     log.info("Initializing the InfluxDb metrics reporter");
     InfluxdbReporter
@@ -56,7 +56,7 @@ class InfluxDbReporter(implicit val system: ActorSystem, val config: Config) ext
       .build(influxDb)
   }
 
-  private[reporting] def getInfluxDb: Influxdb = {
+  private[reporting] def getInfluxDb(): Influxdb = {
     new Influxdb(influxdbHost, port, database, user, password, TimeUnit.MILLISECONDS)
   }
 

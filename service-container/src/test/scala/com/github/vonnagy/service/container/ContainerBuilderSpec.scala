@@ -18,7 +18,10 @@ class ContainerBuilderSpec extends Specification {
         .withRoutes(classOf[TestEndpoints])
         .build
 
-      cont.registeredRoutes.length must be equalTo 1
+
+      val routes = cont.registeredRoutes
+      cont.shutdown
+      routes.length must be equalTo 1
     }
 
     "allow for defining health checks" in {
@@ -29,7 +32,9 @@ class ContainerBuilderSpec extends Specification {
         }
       }).build
 
-      cont.registeredHealthChecks.length must be equalTo 1
+      val checks = cont.registeredHealthChecks
+      cont.shutdown
+      checks.length must be equalTo 1
     }
 
   }

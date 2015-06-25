@@ -1,11 +1,12 @@
 package com.github.vonnagy.service.container.metrics
 
 import org.specs2.mutable.Specification
+import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.`Remote-Address`
 import spray.http.{StatusCodes, RemoteAddress, ContentTypes, MediaTypes}
 import spray.testkit.Specs2RouteTest
 
-class MetricsEndpointsSpec extends Specification with Specs2RouteTest {
+class MetricsEndpointsSpec extends Specification with Specs2RouteTest with AfterAll {
 
   val endpoints = new MetricsEndpoints()(system, system)
 
@@ -31,6 +32,13 @@ class MetricsEndpointsSpec extends Specification with Specs2RouteTest {
         handled must beTrue
         status must beEqualTo(StatusCodes.NotFound)
       }
+    }
+  }
+
+  def afterAll = {
+    if (!system.isTerminated) {
+      system.shutdown
+      system.awaitTermination
     }
   }
 }

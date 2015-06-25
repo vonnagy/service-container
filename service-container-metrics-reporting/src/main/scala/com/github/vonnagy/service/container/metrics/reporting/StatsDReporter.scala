@@ -22,7 +22,7 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
   /**
    * Stop the scheduled metric reporting
    */
-  override def stop: Unit = {
+  override def stop(): Unit = {
     super.stop
     if (statsD != null) {
       statsD.close()
@@ -42,7 +42,7 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
       metrics.metricRegistry.getTimers())
   }
 
-  private[reporting] def getReporter: com.github.jjagged.metrics.reporting.StatsDReporter = {
+  private[reporting] def getReporter(): com.github.jjagged.metrics.reporting.StatsDReporter = {
 
     log.info("Initializing the StatsD metrics reporter");
 
@@ -55,7 +55,7 @@ class StatsDReporter(implicit val system: ActorSystem, val config: Config) exten
 
   }
 
-  private[reporting] def getStatsD: StatsD = {
+  private[reporting] def getStatsD(): StatsD = {
     new StatsD(statsdHost, port);
   }
 }

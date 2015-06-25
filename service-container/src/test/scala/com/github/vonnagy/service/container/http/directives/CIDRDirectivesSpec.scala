@@ -1,6 +1,7 @@
 package com.github.vonnagy.service.container.http.directives
 
 import org.specs2.mutable.Specification
+import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.`Remote-Address`
 import spray.http._
 import spray.testkit.Specs2RouteTest
@@ -8,7 +9,7 @@ import spray.testkit.Specs2RouteTest
 /**
  * Created by Ivan von Nagy on 1/20/15.
  */
-class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2RouteTest {
+class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2RouteTest with AfterAll {
 
   val yeah = complete("Yeah!")
 
@@ -81,7 +82,7 @@ class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2Ro
     }
   }
 
-  step {
+  def afterAll = {
     if (!system.isTerminated) {
       system.shutdown
       system.awaitTermination
