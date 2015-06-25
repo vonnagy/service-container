@@ -36,7 +36,7 @@ object ContainerBuild extends Build {
 
     crossScalaVersions := Seq("2.10.5", "2.11.6"),
 
-    scalacOptions ++= Seq("-encoding", "UTF-8", s"-target:jvm-$JDK", "-feature", "-language:_", "-deprecation", "-unchecked"),
+    scalacOptions ++= Seq("-encoding", "UTF-8", "-feature", "-language:_", "-deprecation", "-unchecked"),
     javacOptions in Compile ++= Seq("-encoding", "UTF-8", "-source", JDK, "-target", JDK,
       "-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options"),
 
@@ -44,6 +44,9 @@ object ContainerBuild extends Build {
     runMain in Compile <<= Defaults.runMainTask(fullClasspath in Compile, runner in (Compile, run)),
 
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
+
+    ivyLoggingLevel in ThisBuild := UpdateLogging.Quiet,
+    ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
 
     parallelExecution in ThisBuild := false,
     parallelExecution in Global := false
