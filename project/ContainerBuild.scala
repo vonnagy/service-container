@@ -16,12 +16,13 @@ object ContainerBuild extends Build {
     organization := "com.github.vonnagy",
     version := "1.0.2",
     description := "Service Container",
-    scalaVersion := "2.11.6"
+    scalaVersion := "2.11.6",
+    crossScalaVersions := Seq("2.10.5", "2.11.6")
   )
 
   override val settings = super.settings ++ baseSettings
 
-  lazy val parentSettings = baseSettings ++ Seq(
+  lazy val noPublishSettings = Seq(
     publish := {},
     publishLocal := {},
     publishArtifact := false,
@@ -33,8 +34,6 @@ object ContainerBuild extends Build {
   lazy val defaultSettings = Test.testSettings ++ Seq(
 
     logLevel := Level.Info,
-
-    crossScalaVersions := Seq("2.10.5", "2.11.6"),
 
     scalacOptions ++= Seq("-encoding", "UTF-8", "-feature", "-language:_", "-deprecation", "-unchecked"),
     javacOptions in Compile ++= Seq("-encoding", "UTF-8", "-source", JDK, "-target", JDK,
@@ -107,7 +106,7 @@ object ContainerBuild extends Build {
   lazy val root = Project(
     id = "root",
     base = file("."),
-    settings = parentSettings,
+    settings = noPublishSettings ++ baseSettings,
     aggregate = Seq(container, metricsReporting, examples)
   )
 
@@ -128,7 +127,7 @@ object ContainerBuild extends Build {
   lazy val examples = Project(
     id = "service-container-examples",
     base = file("./service-container-examples"),
-    settings = defaultSettings
+    settings = noPublishSettings ++ defaultSettings
         ++ Seq(libraryDependencies ++= Dependencies.examples)
   ).dependsOn(container)
 
