@@ -54,34 +54,35 @@ object ContainerBuild extends Build {
   object Dependencies {
 
     object Compile {
-      val sprayCan        = "io.spray"              %% "spray-can"        % SPRAY_VERSION
-      val sprayHttp       = "io.spray"              %% "spray-http"       % SPRAY_VERSION
-      val sprayHttpx      = "io.spray"              %% "spray-httpx"      % SPRAY_VERSION
-      val sprayRouting    = "io.spray"              %% "spray-routing"    % SPRAY_VERSION
-      val config          = "com.typesafe"          % "config"            % CONFIG_VERSION
-      val akkaActor       = "com.typesafe.akka"     %% "akka-actor"       % AKKA_VERSION
-      val akkaSlf4j       = "com.typesafe.akka"     %% "akka-slf4j"       % AKKA_VERSION
-      val akkaRemote      = "com.typesafe.akka"     %% "akka-remote"      % AKKA_VERSION
-      val slf4j           = "org.slf4j"             % "slf4j-api"         % "1.7.12"
-      val logback         = "ch.qos.logback"        % "logback-classic"   % "1.1.3"
-      val slf4jOverLog4j  = "org.slf4j"             % "log4j-over-slf4j"  % "1.7.12"
-      val liftJson        = "net.liftweb"           %% "lift-json"        % LIFT_VERSION
-      val liftExt         = "net.liftweb"           %% "lift-json-ext"    % LIFT_VERSION
-      val metricsCore     = "io.dropwizard.metrics" % "metrics-core"      % METRICS_VERSION
-      val metricsJvm      = "io.dropwizard.metrics" % "metrics-jvm"       % METRICS_VERSION
-      val joda            = "joda-time"             % "joda-time"         % "2.8.1"
+      val sprayCan        = "io.spray"              %%  "spray-can"         % SPRAY_VERSION
+      val sprayHttp       = "io.spray"              %%  "spray-http"        % SPRAY_VERSION
+      val sprayHttpx      = "io.spray"              %%  "spray-httpx"       % SPRAY_VERSION
+      val sprayRouting    = "io.spray"              %%  "spray-routing"     % SPRAY_VERSION
+      val config          = "com.typesafe"          %   "config"            % CONFIG_VERSION
+      val akkaActor       = "com.typesafe.akka"     %%  "akka-actor"        % AKKA_VERSION
+      val akkaSlf4j       = "com.typesafe.akka"     %%  "akka-slf4j"        % AKKA_VERSION
+      val akkaRemote      = "com.typesafe.akka"     %%  "akka-remote"       % AKKA_VERSION
+      val slf4j           = "org.slf4j"             %   "slf4j-api"         % "1.7.12"
+      val logback         = "ch.qos.logback"        %   "logback-classic"   % "1.1.3"
+      val slf4jOverLog4j  = "org.slf4j"             %   "log4j-over-slf4j"  % "1.7.12"
+      val liftJson        = "net.liftweb"           %%  "lift-json"         % LIFT_VERSION
+      val liftExt         = "net.liftweb"           %%  "lift-json-ext"     % LIFT_VERSION
+      val metricsCore     = "io.dropwizard.metrics" %   "metrics-core"      % METRICS_VERSION
+      val metricsJvm      = "io.dropwizard.metrics" %   "metrics-jvm"       % METRICS_VERSION
+      val joda            = "joda-time"             %   "joda-time"         % "2.8.1"
 
-      val akkaKafka       = "com.sclasen"           %% "akka-kafka"       % "0.1.0"
-      val metricsStatsd   = "com.github.jjagged"    % "metrics-statsd"    % "1.0.0" exclude("com.codahale.metrics", "metrics")
-      val metricsInflux   = "com.novaquark"         % "metrics-influxdb"  % "0.3.0" exclude("com.codahale.metrics", "metrics")
+      val akkaKafka       = "com.sclasen"           %%  "akka-kafka"        % "0.1.0"
+      val metricsStatsd   = "com.github.jjagged"    %   "metrics-statsd"    % "1.0.0" exclude("com.codahale.metrics", "metrics")
+      val metricsInflux   = "com.novaquark"         %   "metrics-influxdb"  % "0.3.0" excludeAll(ExclusionRule("com.codahale.metrics"))
+      val metricsDataDog  = "org.coursera"          %   "metrics-datadog"   % "1.1.1"
     }
     
     object Test {
-      val akkaTest        = "com.typesafe.akka"     %%  "akka-testkit"    % AKKA_VERSION  % "test"
-      val sprayTest       = "io.spray"              %%  "spray-testkit"   % SPRAY_VERSION % "test"
-      val specsCore       = "org.specs2"            %%  "specs2-core"     % SPECS_VERSION % "test"
-      val specsMock       = "org.specs2"            %%  "specs2-mock"     % SPECS_VERSION % "test"
-      val scalazStream    = "org.scalaz.stream"     %% "scalaz-stream"    % "0.7a"        % "test"
+      val akkaTest        = "com.typesafe.akka"     %%  "akka-testkit"      % AKKA_VERSION  % "test"
+      val sprayTest       = "io.spray"              %%  "spray-testkit"     % SPRAY_VERSION % "test"
+      val specsCore       = "org.specs2"            %%  "specs2-core"       % SPECS_VERSION % "test"
+      val specsMock       = "org.specs2"            %%  "specs2-mock"       % SPECS_VERSION % "test"
+      val scalazStream    = "org.scalaz.stream"     %%  "scalaz-stream"     % "0.7a"        % "test"
     }
 
     import Dependencies.Compile._
@@ -97,8 +98,10 @@ object ContainerBuild extends Build {
     val test = Seq(akkaTest, sprayTest, specsCore, specsMock, scalazStream)
 
     val core = base ++ test
-    val reporting = test ++ Seq(metricsStatsd, metricsInflux)
+    val reporting = test ++ Seq(metricsStatsd, metricsInflux, metricsDataDog)
     val examples = Seq(akkaKafka)
+
+    val overrrides = Set(metricsCore, slf4j)
   }
 
   lazy val moduleSettings = defaultSettings ++ Publish.settings
@@ -121,6 +124,7 @@ object ContainerBuild extends Build {
     id = "service-container-metrics-reporting",
     base = file("./service-container-metrics-reporting"),
     settings = moduleSettings
+        ++ Set(dependencyOverrides ++= Dependencies.overrrides)
         ++ Seq(libraryDependencies ++= Dependencies.reporting)
   ).dependsOn(container)
 

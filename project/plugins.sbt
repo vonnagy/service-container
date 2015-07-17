@@ -17,3 +17,6 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.1.0")
 
 // Add coveralls plugin for historical code coverage
 addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0")
+
+// This plugin is is for looking at the dependencies
+addSbtPlugin("com.gilt" % "sbt-dependency-graph-sugar" % "0.7.5")

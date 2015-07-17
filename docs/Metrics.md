@@ -64,35 +64,34 @@ The following fields are **required** for every reporter:
 * enabled - If the reporter is enabled then it will be loaded
 * reporting-interval - Each reporter can define it's own reporting interval
 
-The Service Container also provides a library with extra reporters: `StatsDReporter` and `InfluxDbReporter`. They are container in the `service-container-metrics-reporting`.
+The Service Container also provides a library with extra reporters: `DogStatsDReporter`, `InfluxDbReporter`, and `StatsDReporter`. They are container in the `service-container-metrics-reporting`.
 
 ### Custom Reporters
-It is simple to create your own reporter by deriving your own reporter class from `com.github.vonnagy.service.container.metrics.reporting.ScheduledReporter`. You will also provide it's own configuration (see above). Below is an example of creating a [Datadog](https://www.datadoghq.com/) reporter which will report metrics to a Datadog account. It depends on the metrics Datadog library (https://github.com/coursera/metrics-datadog):
+It is simple to create your own reporter by deriving your own reporter class from `com.github.vonnagy.service.container.metrics.reporting.ScheduledReporter`. 
+You will also provide it's own configuration (see above). Below is an example of creating a [Datadog](https://www.datadoghq.com/) reporter which will report metrics to a Datadog account. 
+It depends on the metrics Datadog library (https://github.com/coursera/metrics-datadog):
 
-`"org.coursera" % "metrics-datadog" % "1.0.1"`
+`"org.coursera" % "metrics-datadog" % "1.1.1"`
 
 ```scala
-package mypackage.DatadogMetricsReporter
+package mypackage.DatadogHttpReporter
 
 import java.util.concurrent.TimeUnit
 import com.github.vonnagy.service.container.log.LoggingAdapter
-com.github.vonnagy.service.container.metrics.reporting.ScheduledReporter
+import com.github.vonnagy.service.container.metrics.reporting.ScheduledReporter
 import akka.actor.ActorSystem;
 import com.typesafe.config.Config;
-import org.coursera.metrics.datadog.DatadogReporter;
-import org.coursera.metrics.datadog.transport.HttpTransport;
 
-class DatadogMetricsReporter(implicit val system: ActorSystem, val config: Config) extends ScheduledReporter with LoggingAdapter {
+class DatadogHttpReporter(implicit val system: ActorSystem, val config: Config) extends ScheduledReporter with LoggingAdapter {
 
   private lazy val reporter = getReporter
-  private val apiKey = config.getString("api-key")
   private val prefix = config.getString("metric-prefix")
 
   /**
    * Stop the scheduled metric reporting
    */
   override def stop: Unit = {
-    log.info("Stopping the Datadog metrics reporter");
+    log.info("Stopping the UDP metrics reporter");
     super.stop
     if (reporter != null)
       reporter.stop
@@ -111,7 +110,7 @@ class DatadogMetricsReporter(implicit val system: ActorSystem, val config: Confi
   }
 
   private def getReporter: DatadogReporter = {
-    log.info("Initializing the DataDog metrics reporter");
+    log.info("Initializing the DatadogHttp metrics reporter");
     val tags = Seq(
       s"app:${application.replace(" ", "-").toLowerCase}",
       s"version:$version")
@@ -132,7 +131,7 @@ container {
         reporters {
             datadog {
               # The name of the reporter class
-              class = "mypackage.DatadogMetricsReporter"
+              class = "mypackage.DatadogHttpReporter"
               # Is the reporter enabled
               enabled = on
               # What is the interval to report on
