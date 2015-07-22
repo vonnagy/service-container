@@ -3,8 +3,8 @@ package com.github.vonnagy.service.container.http
 import java.util.concurrent.TimeUnit
 
 import akka.ConfigurationException
-import akka.actor.{Actor, ActorRefFactory, ActorSystem, ExtendedActorSystem}
-import akka.io.{IO, Tcp}
+import akka.actor._
+import akka.io.IO
 import akka.routing.FromConfig
 import akka.util.Timeout
 import com.github.vonnagy.service.container.health.{HealthEndpoints, HealthInfo, HealthState}
@@ -42,28 +42,26 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
 
   private val httpServer = IO(Http)
 
-  val httpListener = context.system.actorSelection(httpServer.path.toString.concat("/listener-0"))
-  var httpBound = false
+  var httpListener: Option[ActorSelection] = None
 
   val httpStarting: Receive = {
-    case Tcp.Bound(_) =>
+
+    case Http.Bound(_) =>
       scheduleHttpMetrics(FiniteDuration(10, TimeUnit.SECONDS))
-      httpBound = true
+      httpListener = Some(context.system.actorSelection(sender.path))
       self ! HttpStarted
 
-    case Http.Connected => sender ! Http.Register(self)
-
-    case Tcp.CommandFailed(_: Http.Bind) =>
+    case Http.CommandFailed(_: Http.Bind) =>
       log.error(s"Error trying to bind to $httpInterface:$port")
       context.stop(self)
   }
 
   val httpStopping: Receive = {
-    case Tcp.Unbound =>
-      httpBound = false
+    case Http.Unbound =>
+      httpListener = None
       system.stop(httpServer)
       self ! HttpStopped
-    case Tcp.CommandFailed(_: Http.Unbind) =>
+    case Http.CommandFailed(_: Http.Unbind) =>
       log.error(s"Error trying to unbind from $httpInterface:$port")
   }
 
@@ -93,7 +91,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
    */
   def stopHttpServer(): Unit = {
     cancelHttpMetrics
-    httpListener ! Http.Unbind
+    if (httpListener.isDefined) httpListener.get ! Http.Unbind
   }
 
   /**
@@ -101,7 +99,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
    * @return An instance of `HealthInfo`
    */
   def getHttpHealth(): HealthInfo = {
-    httpBound match {
+    httpListener.isDefined match {
       case true => HealthInfo("http", HealthState.OK, s"Currently connected on $httpInterface:$port")
       case false => HealthInfo("http", HealthState.CRITICAL, s"Currently not connected on $httpInterface:$port")
     }

@@ -35,7 +35,7 @@ class HttpServiceSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
     }
 
     "be able to start and Http service on a specified port" in {
-      act.underlyingActor.httpBound must beFalse
+      act.underlyingActor.httpListener.isDefined must beFalse
       act.underlyingActor.startHttpServer(Nil)
       val msg = probe.expectMsg(HttpStarted)
       msg must be equalTo HttpStarted

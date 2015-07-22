@@ -32,7 +32,7 @@ class HttpMetricsSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
   }, "http")
 
   class MetricTest(implicit val system: ActorSystem) extends HttpMetrics {
-    def httpListener = system.actorSelection(svcAct.children.head.path)
+    def httpListener = Some(system.actorSelection(svcAct.children.head.path))
   }
 
   val metrics = new MetricTest

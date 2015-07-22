@@ -19,7 +19,7 @@ private[http] trait HttpMetrics extends LoggingAdapter {
   var metricsJob: Option[Cancellable] = None
   var lastStats = Stats(FiniteDuration(0, TimeUnit.MILLISECONDS), 0, 0, 0, 0, 0, 0, 0)
 
-  def httpListener: ActorSelection
+  def httpListener: Option[ActorSelection]
 
   val totConn = Gauge("container.http.connections.total") {
     lastStats.totalConnections
@@ -63,7 +63,7 @@ private[http] trait HttpMetrics extends LoggingAdapter {
     try {
       implicit val dis = system.dispatcher
       implicit val timeout: Timeout = 1.second
-      httpListener ? Http.GetStats onSuccess {
+      if (httpListener.isDefined) httpListener.get ? Http.GetStats onSuccess {
         case x: Stats => lastStats = x
       }
     }
