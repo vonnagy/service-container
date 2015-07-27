@@ -11,6 +11,7 @@ import org.coursera.metrics.datadog.DefaultMetricNameFormatter
 
 import scala.collection.convert.wrapAsScala.asScalaBuffer
 
+
 class DogStatsDReporter(implicit val system: ActorSystem, val config: Config) extends ScheduledReporter with LoggingAdapter {
 
   private lazy val reporter = getReporter
@@ -18,7 +19,8 @@ class DogStatsDReporter(implicit val system: ActorSystem, val config: Config) ex
 
   private[reporting] val prefix = config.getString("metric-prefix")
   private[reporting] val apiKey = config.getString("api-key")
-  private[reporting] val tags = config.getStringList("tags").toSeq ++ Seq(
+
+  private[reporting] val tags = config.getStringList("tags") ++ Seq(
     s"app:${application.replace(" ", "-").toLowerCase}",
     s"version:$version")
 

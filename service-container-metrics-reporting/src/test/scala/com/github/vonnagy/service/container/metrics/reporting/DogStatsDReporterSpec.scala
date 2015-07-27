@@ -9,6 +9,7 @@ import org.coursera.metrics.datadog.transport.Transport
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationLike
 
+import scala.collection.mutable
 import scala.concurrent.duration.{FiniteDuration, _}
 
 class DogStatsDReporterSpec extends TestKit(ActorSystem()) with SpecificationLike with Mockito {
@@ -24,6 +25,7 @@ class DogStatsDReporterSpec extends TestKit(ActorSystem()) with SpecificationLik
           reporting-interval=10ms
           metric-prefix = "pref"
           tags = ["boo", "hoo"]
+          api-key = "abc123"
         }
         """)
 
@@ -37,7 +39,7 @@ class DogStatsDReporterSpec extends TestKit(ActorSystem()) with SpecificationLik
       rpt.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
       there was after(100.millisecond).atLeastOne(rpt).report()
 
-      rpt.tags must be equalTo Seq("boo", "hoo", "Container Service")
+      rpt.tags must containAllOf(Seq("boo", "hoo", "app:container-service", "version:1.0.0.N/A"))
       rpt.prefix must be equalTo "pref"
 
       rpt.stop
