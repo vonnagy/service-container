@@ -13,14 +13,14 @@ object RestHttpSample extends App {
     // Add a config to override the host and port as well as setup SSL
     .withConfig(ConfigFactory.parseString(
     s"""
-      |container.http.ssl.enabled=on
-      |container.http.ssl.key-password="changeme"
-      |container.http.ssl.key-store="${getClass.getClassLoader.getResource("keystore").getPath}"
-      |container.http.ssl.key-store-password="changeme"
-      |container.http.ssl.trust-store="${getClass.getClassLoader.getResource("truststore").getPath}"
-      |container.http.ssl.trust-store-password="changeme"
-      |container.http.interface = "localhost"
-      |container.http.port = "9092"
+      container.http.ssl.enabled=off
+      container.http.ssl.key-password="changeme"
+      container.http.ssl.key-store="${getClass.getClassLoader.getResource("keystore").getPath}"
+      container.http.ssl.key-store-password="changeme"
+      container.http.ssl.trust-store="${getClass.getClassLoader.getResource("truststore").getPath}"
+      container.http.ssl.trust-store-password="changeme"
+      container.http.interface = "localhost"
+      container.http.port = "9092"
     """.stripMargin))
     // Add some endpoints
     .withRoutes(classOf[ProductEndpoints]).build
