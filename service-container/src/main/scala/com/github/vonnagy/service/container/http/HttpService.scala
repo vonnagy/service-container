@@ -81,6 +81,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
     val bind = Http.Bind(listener = httpService,
       interface = httpInterface,
       port = port,
+      backlog = 10000,
       settings = Some(spSettings))
 
     httpServer ! bind
