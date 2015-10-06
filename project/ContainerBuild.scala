@@ -11,13 +11,17 @@ object ContainerBuild extends Build {
   val SPECS_VERSION = "3.6.1"
   val JDK = "1.8"
 
+  val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
+
   lazy val baseSettings = Seq(
     name := "Service Container",
     organization := "com.github.vonnagy",
     version := "1.0.4-SNAPSHOT",
     description := "Service Container",
     scalaVersion := "2.11.6",
-    crossScalaVersions := Seq("2.10.5", "2.11.6")
+    crossScalaVersions := Seq("2.10.5", "2.11.6"),
+    packageOptions in (Compile, packageBin) +=
+        Package.ManifestAttributes( "Implementation-Build" -> buildNumber )
   )
 
   override val settings = super.settings ++ baseSettings
