@@ -20,8 +20,8 @@ object ContainerInfo extends LoggingAdapter {
   val application = applicationInfo._1
   val applicationVersion = applicationInfo._2
 
-  val manifest = getManifest(this.getClass)
-  val containerVersion = manifest.getMainAttributes().getValue("Implementation-Version") + "." + manifest.getMainAttributes().getValue("Implementation-Build")
+  val containerManifest = getManifest(this.getClass)
+  val containerVersion = containerManifest.getMainAttributes().getValue("Implementation-Version") + "." + containerManifest.getMainAttributes().getValue("Implementation-Build")
 
   /**
    * Get the system host
@@ -76,7 +76,20 @@ object ContainerInfo extends LoggingAdapter {
       else
         None
     }).headOption match {
-      case None => None
+      case None =>
+        sys.props.get("sun.java.command") match {
+          case Some(command) if !command.isEmpty =>
+            try {
+              Some(Class.forName(command))
+            } catch {
+              // Swallow the exception
+              case e: ClassNotFoundException =>
+                None
+            }
+
+          // Nothing could be located
+          case _ => None
+        }
       case c => c
     }
   }
