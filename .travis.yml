@@ -1,10 +1,11 @@
 language: scala
 scala:
-- 2.11.6
-- 2.10.5
+  - 2.11.6
+  - 2.10.5
+before_script: export BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
 script: sbt clean coverage test coverageAggregate
 jdk:
-- oraclejdk8
+  - oraclejdk8
 notifications:
   email:
     recipients:
