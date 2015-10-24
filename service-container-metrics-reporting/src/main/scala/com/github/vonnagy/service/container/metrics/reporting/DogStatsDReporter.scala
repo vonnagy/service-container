@@ -17,6 +17,9 @@ class DogStatsDReporter(implicit val system: ActorSystem, val config: Config) ex
   private lazy val reporter = getReporter
   private lazy val transport = getTransport
 
+  private[reporting] val dogHost = config.getString("host")
+  private[reporting] val port = config.getInt("port")
+
   private[reporting] val prefix = config.getString("metric-prefix")
   private[reporting] val apiKey = config.getString("api-key")
 
@@ -65,7 +68,7 @@ class DogStatsDReporter(implicit val system: ActorSystem, val config: Config) ex
   }
 
   private[reporting] def getTransport(): Transport = {
-    new UdpTransport.Builder().build()
+    new UdpTransport.Builder().withStatsdHost(dogHost).withPort(port).build()
   }
 
 }
