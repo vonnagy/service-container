@@ -3,13 +3,16 @@ import sbt._
 
 object ContainerBuild extends Build {
 
-  val AKKA_VERSION = "2.3.11"
-  val SPRAY_VERSION = "1.3.3"
-  val CONFIG_VERSION = "1.3.0"
-  val METRICS_VERSION = "3.1.2"
-  val LIFT_VERSION = "2.6.2"
-  val SPECS_VERSION = "3.6.1"
+  val SCALA_VERSION = "2.11.7"
   val JDK = "1.8"
+
+  val AKKA_VERSION = "2.3.11"
+  val CONFIG_VERSION = "1.3.0"
+  val JODA_VERSION = "2.9"
+  val LIFT_VERSION = "2.6.2"
+  val METRICS_VERSION = "3.1.2"
+  val SPECS_VERSION = "3.6.1"
+  val SPRAY_VERSION = "1.3.3"
 
   val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
 
@@ -18,8 +21,8 @@ object ContainerBuild extends Build {
     organization := "com.github.vonnagy",
     version := "1.0.5-SNAPSHOT",
     description := "Service Container",
-    scalaVersion := "2.11.6",
-    crossScalaVersions := Seq("2.10.5", "2.11.6"),
+    scalaVersion := SCALA_VERSION,
+    crossScalaVersions := Seq("2.10.5", SCALA_VERSION),
     packageOptions in (Compile, packageBin) +=
         Package.ManifestAttributes( "Implementation-Build" -> buildNumber )
   )
@@ -73,12 +76,12 @@ object ContainerBuild extends Build {
       val liftExt         = "net.liftweb"           %%  "lift-json-ext"     % LIFT_VERSION
       val metricsCore     = "io.dropwizard.metrics" %   "metrics-core"      % METRICS_VERSION
       val metricsJvm      = "io.dropwizard.metrics" %   "metrics-jvm"       % METRICS_VERSION
-      val joda            = "joda-time"             %   "joda-time"         % "2.8.1"
+      val joda            = "joda-time"             %   "joda-time"         % JODA_VERSION
 
       val akkaKafka       = "com.sclasen"           %%  "akka-kafka"        % "0.1.0"
       val metricsStatsd   = "com.github.jjagged"    %   "metrics-statsd"    % "1.0.0" exclude("com.codahale.metrics", "metrics")
       val metricsInflux   = "com.novaquark"         %   "metrics-influxdb"  % "0.3.0" excludeAll(ExclusionRule("com.codahale.metrics"))
-      val metricsDataDog  = "org.coursera"          %   "metrics-datadog"   % "1.1.1"
+      val metricsDataDog  = "org.coursera"          %   "metrics-datadog"   % "1.1.3"
     }
     
     object Test {
