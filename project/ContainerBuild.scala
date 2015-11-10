@@ -6,13 +6,15 @@ object ContainerBuild extends Build {
   val SCALA_VERSION = "2.11.7"
   val JDK = "1.8"
 
-  val AKKA_VERSION = "2.3.11"
-  val CONFIG_VERSION = "1.3.0"
-  val JODA_VERSION = "2.9"
-  val LIFT_VERSION = "2.6.2"
+  val AKKA_VERSION    = "2.3.11"
+  val CONFIG_VERSION  = "1.3.0"
+  val JODA_VERSION    = "2.9"
+  val LIFT_VERSION    = "2.6.2"
+  val LOGBACK_VERSION = "1.1.3"
   val METRICS_VERSION = "3.1.2"
-  val SPECS_VERSION = "3.6.1"
-  val SPRAY_VERSION = "1.3.3"
+  val SLF4J_VERSION   = "1.7.12"
+  val SPECS_VERSION   = "3.6.1"
+  val SPRAY_VERSION   = "1.3.3"
 
   val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
 
@@ -69,9 +71,9 @@ object ContainerBuild extends Build {
       val akkaActor       = "com.typesafe.akka"     %%  "akka-actor"        % AKKA_VERSION
       val akkaSlf4j       = "com.typesafe.akka"     %%  "akka-slf4j"        % AKKA_VERSION
       val akkaRemote      = "com.typesafe.akka"     %%  "akka-remote"       % AKKA_VERSION
-      val slf4j           = "org.slf4j"             %   "slf4j-api"         % "1.7.12"
-      val logback         = "ch.qos.logback"        %   "logback-classic"   % "1.1.3"
-      val slf4jOverLog4j  = "org.slf4j"             %   "log4j-over-slf4j"  % "1.7.12"
+      val slf4j           = "org.slf4j"             %   "slf4j-api"         % SLF4J_VERSION
+      val logback         = "ch.qos.logback"        %   "logback-classic"   % LOGBACK_VERSION
+      val slf4jOverLog4j  = "org.slf4j"             %   "log4j-over-slf4j"  % SLF4J_VERSION
       val liftJson        = "net.liftweb"           %%  "lift-json"         % LIFT_VERSION
       val liftExt         = "net.liftweb"           %%  "lift-json-ext"     % LIFT_VERSION
       val metricsCore     = "io.dropwizard.metrics" %   "metrics-core"      % METRICS_VERSION
@@ -79,8 +81,8 @@ object ContainerBuild extends Build {
       val joda            = "joda-time"             %   "joda-time"         % JODA_VERSION
 
       val akkaKafka       = "com.sclasen"           %%  "akka-kafka"        % "0.1.0"
-      val metricsStatsd   = "com.github.jjagged"    %   "metrics-statsd"    % "1.0.0" exclude("com.codahale.metrics", "metrics")
-      val metricsInflux   = "com.novaquark"         %   "metrics-influxdb"  % "0.3.0" excludeAll(ExclusionRule("com.codahale.metrics"))
+      val metricsStatsd   = "com.github.jjagged"    %   "metrics-statsd"    % "1.0.0"
+      val metricsInflux   = "com.novaquark"         %   "metrics-influxdb"  % "0.3.0" 
       val metricsDataDog  = "org.coursera"          %   "metrics-datadog"   % "1.1.3"
     }
     
@@ -108,7 +110,7 @@ object ContainerBuild extends Build {
     val reporting = test ++ Seq(metricsStatsd, metricsInflux, metricsDataDog)
     val examples = Seq(akkaKafka)
 
-    val overrrides = Set(metricsCore, slf4j)
+    val overrrides = Set(joda, metricsCore, slf4j)
   }
 
   lazy val moduleSettings = defaultSettings ++ Publish.settings
@@ -124,6 +126,7 @@ object ContainerBuild extends Build {
     id = "service-container",
     base = file("./service-container"),
     settings = moduleSettings
+        ++ Set(dependencyOverrides ++= Dependencies.overrrides)
         ++ Seq(libraryDependencies ++= Dependencies.core)
   )
 
@@ -139,6 +142,7 @@ object ContainerBuild extends Build {
     id = "service-container-examples",
     base = file("./service-container-examples"),
     settings = noPublishSettings ++ defaultSettings
+        ++ Set(dependencyOverrides ++= Dependencies.overrrides)
         ++ Seq(libraryDependencies ++= Dependencies.examples)
   ).dependsOn(container)
 
