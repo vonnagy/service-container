@@ -1,10 +1,15 @@
 package com.github.vonnagy.service.container.metrics
 
+import java.util.concurrent.TimeUnit
+
 import org.specs2.mutable.Specification
 import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.`Remote-Address`
 import spray.http.{StatusCodes, RemoteAddress, ContentTypes, MediaTypes}
 import spray.testkit.Specs2RouteTest
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 class MetricsEndpointsSpec extends Specification with Specs2RouteTest with AfterAll {
 
@@ -36,9 +41,6 @@ class MetricsEndpointsSpec extends Specification with Specs2RouteTest with After
   }
 
   def afterAll = {
-    if (!system.isTerminated) {
-      system.shutdown
-      system.awaitTermination
-    }
+    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
   }
 }

@@ -1,14 +1,20 @@
 package com.github.vonnagy.service.container.service
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.{ActorSystem, Terminated}
 import akka.testkit.{TestActorRef, TestProbe}
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState}
 import com.github.vonnagy.service.container.http.HttpStopped
 import com.typesafe.config.ConfigFactory
 import org.specs2.mutable.Specification
+import org.specs2.specification.AfterAll
 import spray.util.Utils
 
-class ServicesManagerSpec extends Specification {
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
+class ServicesManagerSpec extends Specification with AfterAll {
 
   sequential
 
@@ -66,9 +72,8 @@ class ServicesManagerSpec extends Specification {
     }
   }
 
-  step {
-    system.shutdown
-    system.awaitTermination
+  def afterAll = {
+    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
   }
 
 }

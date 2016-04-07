@@ -17,8 +17,7 @@ class SystemShutdownSpec extends Specification {
       }
 
       shut.shutdownActorSystem(sys) {}
-
-      sys.isTerminated must beTrue
+      sys.whenTerminated.isCompleted must beTrue
     }
   }
 }

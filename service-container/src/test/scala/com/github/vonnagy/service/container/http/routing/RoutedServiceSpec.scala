@@ -1,15 +1,21 @@
 package com.github.vonnagy.service.container.http.routing
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorDSL._
 import akka.actor._
 import akka.testkit.{TestActorRef, TestProbe}
 import com.github.vonnagy.service.container.http.RejectionResponse
 import org.specs2.mutable.Specification
+import org.specs2.specification.AfterAll
 import spray.http._
 import spray.routing._
 import spray.testkit.Specs2RouteTest
 
-class RoutedServiceSpec extends Specification with Directives with Specs2RouteTest {
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
+class RoutedServiceSpec extends Specification with Directives with Specs2RouteTest with AfterAll {
 
   def echoComplete[T]: T => Route = { x ⇒ complete(x.toString) }
 
@@ -108,9 +114,7 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
     }
   }
 
-
-  step {
-    system.shutdown
-    system.awaitTermination
+  def afterAll = {
+    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
   }
 }

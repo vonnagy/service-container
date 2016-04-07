@@ -1,23 +1,27 @@
 package com.github.vonnagy.service.container.core
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.ActorSystem
-import com.github.vonnagy.service.container.service.ContainerService
 import org.slf4j.LoggerFactory
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 
 /**
- * This trait implements the termination handler to stop the system when the JVM exits.
- */
+  * This trait implements the termination handler to stop the system when the JVM exits.
+  */
 trait SystemShutdown {
 
   implicit val system: ActorSystem
   private val shutLog = LoggerFactory.getLogger(this.getClass)
 
   /**
-   * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
-   */
+    * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
+    */
   sys.addShutdownHook {
-    if (system != null && !system.isTerminated) {
+    if (system != null) {
       system.log.info("Shutdown hook called: Shutting down the actor system")
       shutdownActorSystem(system) {
         // Do nothing since the process is shutting down
@@ -26,16 +30,16 @@ trait SystemShutdown {
   }
 
   /**
-   * Shutdown the actor system
-   */
+    * Shutdown the actor system
+    */
   private[container] def shutdownActorSystem(system: ActorSystem)(f: => Unit) = {
 
-    if (system != null && !system.isTerminated) {
+    if (system != null) {
       try {
         shutLog.info("Shutting down the actor system")
-        system.shutdown
+        system.terminate()
         // Wait for termination if it is not already complete
-        system.awaitTermination()
+        Await.result(system.whenTerminated, Duration.apply(30, TimeUnit.SECONDS))
         shutLog.info("The actor system has terminated")
       }
       catch {

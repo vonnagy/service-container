@@ -1,8 +1,6 @@
 package com.github.vonnagy.service.container.service
 
-import akka.actor.{ActorRefFactory, ActorSystem}
 import org.specs2.mutable.Specification
-import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 
 class ContainerServiceSpec extends Specification {
 
@@ -21,7 +19,7 @@ class ContainerServiceSpec extends Specification {
       val cont = new ContainerService(Nil, Nil, Nil)
       cont.start
       cont.shutdown
-      cont.system.isTerminated must beTrue
+      cont.system.whenTerminated.isCompleted must beTrue
     }
 
 

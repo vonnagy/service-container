@@ -1,12 +1,15 @@
 package com.github.vonnagy.service.container.health
 
+import java.util.concurrent.TimeUnit
+
 import org.specs2.mutable.Specification
 import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.`Remote-Address`
 import spray.http._
 import spray.testkit.Specs2RouteTest
 
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 class HealthEndpointsSpec extends Specification with Specs2RouteTest with AfterAll {
 
@@ -75,9 +78,6 @@ class HealthEndpointsSpec extends Specification with Specs2RouteTest with AfterA
   }
 
   def afterAll = {
-    if (!system.isTerminated) {
-      system.shutdown
-      system.awaitTermination
-    }
+    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
   }
 }

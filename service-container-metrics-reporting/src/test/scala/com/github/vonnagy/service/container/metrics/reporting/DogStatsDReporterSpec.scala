@@ -2,17 +2,15 @@ package com.github.vonnagy.service.container.metrics.reporting
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorSystem
-import akka.testkit.TestKit
+import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import com.typesafe.config.ConfigFactory
 import org.coursera.metrics.datadog.transport.Transport
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationLike
 
-import scala.collection.mutable
 import scala.concurrent.duration.{FiniteDuration, _}
 
-class DogStatsDReporterSpec extends TestKit(ActorSystem()) with SpecificationLike with Mockito {
+class DogStatsDReporterSpec extends AkkaTestkitSpecs2Support with SpecificationLike with Mockito {
 
   "The DatadogReporter reporter" should {
 
@@ -22,6 +20,8 @@ class DogStatsDReporterSpec extends TestKit(ActorSystem()) with SpecificationLik
         """
          {
           enabled=on
+          host="localhost"
+          port=8125
           reporting-interval=10ms
           metric-prefix = "pref"
           tags = ["boo", "hoo"]
@@ -45,11 +45,6 @@ class DogStatsDReporterSpec extends TestKit(ActorSystem()) with SpecificationLik
       rpt.stop
       there was one(transport).close()
     }
-  }
-
-  step {
-    system.shutdown()
-    system.awaitTermination()
   }
 
 }

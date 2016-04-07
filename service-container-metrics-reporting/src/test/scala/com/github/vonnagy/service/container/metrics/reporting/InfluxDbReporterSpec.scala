@@ -2,8 +2,7 @@ package com.github.vonnagy.service.container.metrics.reporting
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorSystem
-import akka.testkit.TestKit
+import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import metrics_influxdb.{Influxdb, InfluxdbReporter}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationLike
@@ -11,9 +10,9 @@ import org.specs2.mutable.SpecificationLike
 import scala.concurrent.duration._
 
 /**
- * Created by Ivan von Nagy on 1/21/15.
- */
-class InfluxDbReporterSpec extends TestKit(ActorSystem()) with SpecificationLike with Mockito {
+  * Created by Ivan von Nagy on 1/21/15.
+  */
+class InfluxDbReporterSpec extends AkkaTestkitSpecs2Support with SpecificationLike with Mockito {
 
   "The InfluxDbReporter reporter" should {
 
@@ -31,11 +30,6 @@ class InfluxDbReporterSpec extends TestKit(ActorSystem()) with SpecificationLike
       rpt.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
       there was after(30.millisecond).atLeastOne(rpt).report()
     }
-  }
-
-  step {
-    system.shutdown()
-    system.awaitTermination()
   }
 
 }

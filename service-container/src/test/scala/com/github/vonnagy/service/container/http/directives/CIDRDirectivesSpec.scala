@@ -1,10 +1,15 @@
 package com.github.vonnagy.service.container.http.directives
 
+import java.util.concurrent.TimeUnit
+
 import org.specs2.mutable.Specification
 import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.`Remote-Address`
 import spray.http._
 import spray.testkit.Specs2RouteTest
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 /**
  * Created by Ivan von Nagy on 1/20/15.
@@ -83,9 +88,6 @@ class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2Ro
   }
 
   def afterAll = {
-    if (!system.isTerminated) {
-      system.shutdown
-      system.awaitTermination
-    }
+    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
   }
 }

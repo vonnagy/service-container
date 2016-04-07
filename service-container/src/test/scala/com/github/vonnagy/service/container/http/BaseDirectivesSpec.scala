@@ -1,11 +1,16 @@
 package com.github.vonnagy.service.container.http
 
+import java.util.concurrent.TimeUnit
+
 import org.specs2.mutable.Specification
 import org.specs2.specification.AfterAll
 import spray.http.HttpHeaders.Accept
 import spray.http.{MediaType, ContentType, MediaTypes}
 import spray.routing.{Route, UnacceptedResponseContentTypeRejection}
 import spray.testkit.Specs2RouteTest
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2RouteTest with AfterAll {
 
@@ -77,9 +82,6 @@ class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2Ro
   }
 
   def afterAll = {
-    if (!system.isTerminated) {
-      system.shutdown
-      system.awaitTermination
-    }
+    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
   }
 }

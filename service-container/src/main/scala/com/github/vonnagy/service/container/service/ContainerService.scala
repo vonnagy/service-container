@@ -35,7 +35,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
    */
   def start(): Unit = {
 
-    if (!started && !system.isTerminated) {
+    if (!started) {
       started = true
 
       // Update the health check registry
@@ -49,9 +49,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
       Await.result(servicesParent ? StatusRunning, 5 seconds)
       log.info("The container service has been started")
     }
-    else if (system.isTerminated) {
-      log.error("The container service has already been stopped")
-    }
+
   }
 
   /**
@@ -59,7 +57,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
    * the shutdown process.
    */
   def shutdown(): Unit = {
-    if (started && !system.isTerminated) {
+    if (started) {
       shutdownActorSystem(system) {
         // Do nothing
       }
