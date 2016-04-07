@@ -136,7 +136,7 @@ object ContainerBuild extends Build {
     settings = moduleSettings
         ++ Set(dependencyOverrides ++= Dependencies.overrrides)
         ++ Seq(libraryDependencies ++= Dependencies.reporting)
-  ).dependsOn(container)
+  ).dependsOn(container % "test->test;compile->compile")
 
   lazy val examples = Project(
     id = "service-container-examples",
