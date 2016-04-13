@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.ActorDSL._
 import akka.actor._
 import akka.testkit.{TestActorRef, TestProbe}
+import com.github.vonnagy.service.container.TestEndpoints
 import com.github.vonnagy.service.container.http.RejectionResponse
 import org.specs2.mutable.Specification
 import org.specs2.specification.AfterAll
@@ -23,16 +24,8 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
     become { case _ =>}
   })
 
-  val testRoute = new RoutedEndpoints {
-    def route = {
-      path("test") {
-        complete("test")
-      }
-    }
-  }
-
   val probe = new TestProbe(system)
-  val httpAct = TestActorRef(Props(classOf[RoutedService], Seq(testRoute)), svcAct, "http")
+  val httpAct = TestActorRef(Props(classOf[RoutedService], Seq(classOf[TestEndpoints])), svcAct, "http")
   val svc = httpAct.underlyingActor.asInstanceOf[RoutedService]
 
   "The RoutedService" should {

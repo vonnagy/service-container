@@ -3,7 +3,7 @@ package com.github.vonnagy.service.container.http
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import akka.io.IO
+import akka.io.{Tcp, IO}
 import akka.routing.FromConfig
 import akka.util.Timeout
 import com.github.vonnagy.service.container.health.{HealthEndpoints, HealthInfo, HealthState}
@@ -16,6 +16,7 @@ import spray.can.server.ServerSettings
 import spray.routing.RouteConcatenation
 
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 import scala.reflect.runtime.{universe => ru}
 
 case class HttpStarted()
@@ -45,7 +46,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
 
   val httpStarting: Receive = {
 
-    case Http.Bound(_) =>
+    case Tcp.Bound(_) =>
       scheduleHttpMetrics(FiniteDuration(10, TimeUnit.SECONDS))
       httpListener = Some(context.system.actorSelection(sender.path))
       self ! HttpStarted
@@ -97,7 +98,8 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
 
   /**
    * Get the health of the Http server
-   * @return An instance of `HealthInfo`
+    *
+    * @return An instance of `HealthInfo`
    */
   def getHttpHealth(): HealthInfo = {
     httpListener.isDefined match {
