@@ -4,6 +4,7 @@ import akka.actor.{ActorRefFactory, ActorSystem}
 import akka.japi.Util._
 import com.github.vonnagy.service.container.http.directives.CIDRDirectives
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
+import com.github.vonnagy.service.container.service.ShutdownService
 import org.joda.time.{DateTime, DateTimeZone}
 import spray.http.StatusCodes
 
@@ -27,8 +28,11 @@ class BaseEndpoints(implicit system: ActorSystem,
       post {
         cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
           respondPlain { ctx =>
-            ctx.complete("The system is being shutdown: ".concat(new DateTime(System.currentTimeMillis(), DateTimeZone.UTC).toString))
-            sys.exit(0)
+            ctx.complete("The system is being shutdown: ".concat(new DateTime(System.currentTimeMillis(),
+              DateTimeZone.UTC).toString))
+
+            // Send a message to the root actor of this service
+            system.actorSelection("akka://server/user/service") ! ShutdownService(true)
           }
         }
       }

@@ -12,7 +12,7 @@ import org.specs2.specification.AfterAll
 import spray.util.Utils
 
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
 class ServicesManagerSpec extends Specification with AfterAll {
 
@@ -28,7 +28,8 @@ class ServicesManagerSpec extends Specification with AfterAll {
       """).withFallback(ConfigFactory.load()))
 
   val probe = TestProbe()
-  lazy val act = TestActorRef[ServicesManager](ServicesManager.props(Nil, Nil), "service")
+
+  lazy val act = TestActorRef[ServicesManager](ServicesManager.props(null, Nil, Nil), "service")
 
   "The ServicesManager" should {
 
@@ -65,10 +66,18 @@ class ServicesManagerSpec extends Specification with AfterAll {
       msg.state must be equalTo (HealthState.CRITICAL)
     }
 
-    "be able to shutdown properly" in {
+    "be able to shutdown the actor properly" in {
       probe.watch(act);
       act.stop
       probe.expectMsgClass(classOf[Terminated]) must not beNull
+    }
+
+    "be able to send the actor a shutdown message and have it terminate the entire system" in {
+      val cont = new ContainerService(Nil, Nil, Nil)
+      val act = TestActorRef[ServicesManager](ServicesManager.props(cont, Nil, Nil), "service")
+
+      probe.send(act, ShutdownService)
+      cont.started must beFalse.eventually(3, 500 milliseconds)
     }
   }
 

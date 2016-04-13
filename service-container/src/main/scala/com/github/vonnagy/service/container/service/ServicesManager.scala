@@ -8,17 +8,22 @@ import com.github.vonnagy.service.container.metrics.reporting.MetricsReportingMa
 
 case class StatusRunning()
 
+case class ShutdownService(exit: Boolean = false)
+
 object ServicesManager {
-  def props(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[Tuple2[String, Props]]): Props =
-    Props(classOf[ServicesManager], routeEndpoints, props).withDispatcher("akka.actor.service-dispatcher")
+  def props(service: ContainerService,
+            routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[Tuple2[String, Props]]): Props =
+    Props(classOf[ServicesManager], service, routeEndpoints, props).withDispatcher("akka.actor.service-dispatcher")
 }
 
 /**
- * This is the services parent actor that contains all registered services
+ * This is the services parent actor that contains all registered services\
+ * @param service The main service
  * @param routeEndpoints The routes to manage
  * @param props The collection of registered services to start
  */
-class ServicesManager(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[Tuple2[String, Props]]) extends Actor
+class ServicesManager(service: ContainerService,
+                      routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[Tuple2[String, Props]]) extends Actor
 with HttpService with RegisteredHealthCheckActor with Stash {
 
   val httpInterface = context.system.settings.config.getString("container.http.interface")
@@ -67,6 +72,12 @@ with HttpService with RegisteredHealthCheckActor with Stash {
         s"Currently managing ${context.children.toSeq.length} services (including http)", None, List(getHttpHealth))
 
     case HttpStopped => context.become(stopped)
+
+    case ShutdownService(exit) =>
+      service.shutdown()
+      if (exit) {
+        sys.exit()
+      }
 
   }: Receive
 

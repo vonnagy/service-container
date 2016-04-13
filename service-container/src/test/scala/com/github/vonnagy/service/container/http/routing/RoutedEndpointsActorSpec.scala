@@ -23,14 +23,8 @@ class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with Specificati
         }
       }, "service")
 
-      val r = new RoutedEndpoints {
-        override def route = {
-          path("route") {
-            complete("route")
-          }
-        }
-      }
-      val routeSvc = svc.underlyingActor.context.actorOf(FromConfig.props(RoutedService.props(Seq(r))), "http")
+      val routeSvc = svc.underlyingActor.context
+        .actorOf(FromConfig.props(RoutedService.props(Seq(classOf[TestRoutedEndpoints]))), "http")
 
       val act = TestActorRef(new RoutedEndpointsActor {
         def receive = {
@@ -48,5 +42,15 @@ class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with Specificati
 
     }
   }
+}
 
+class TestRoutedEndpoints(implicit val system: ActorSystem,
+                          actorRefFactory: ActorRefFactory) extends RoutedEndpoints {
+
+  val i = 0
+  override def route = {
+    path("route") {
+      complete("route")
+    }
+  }
 }

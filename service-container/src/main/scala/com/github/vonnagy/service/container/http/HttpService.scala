@@ -2,7 +2,6 @@ package com.github.vonnagy.service.container.http
 
 import java.util.concurrent.TimeUnit
 
-import akka.ConfigurationException
 import akka.actor._
 import akka.io.IO
 import akka.routing.FromConfig
@@ -71,7 +70,8 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
   def startHttpServer(routes: Seq[Class[_ <: RoutedEndpoints]]): Unit = {
 
     implicit val timeout = Timeout(2 seconds)
-    val loadedRoutes = loadRoutes(routes ++ Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints]))
+    //val loadedRoutes = loadRoutes(routes ++ Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints]))
+    val loadedRoutes = routes ++ Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints])
     val httpService = context.actorOf(FromConfig.props(RoutedService.props(loadedRoutes)), "http")
 
     // a running HttpServer can be bound, unbound and rebound
@@ -105,39 +105,6 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
       case false => HealthInfo("http", HealthState.CRITICAL, s"Currently not connected on $httpInterface:$port")
     }
 
-  }
-
-  /**
-   * Load the defined routes
-   */
-  private def loadRoutes(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]): Seq[RoutedEndpoints] = {
-
-    log.info("Setting up all of the routes")
-    val newRoutes =
-      for {
-        route <- routeEndpoints
-      } yield {
-        val ct = route.getConstructors.last
-        val params = ct.getParameterTypes
-
-        val p = params.length match {
-          case 0 => Nil
-          case _ => List(classOf[ActorSystem] -> context.system)
-        }
-        val args = List(classOf[ActorSystem] -> context.system, classOf[ActorRefFactory] -> context)
-
-        context.system.asInstanceOf[ExtendedActorSystem].dynamicAccess
-          .createInstanceFor[RoutedEndpoints](route.getName, args).map({
-          case route =>
-            route
-        }).recover({
-          case e => throw new ConfigurationException(
-            "RoutedEndpoints can't be loaded [" + route.getName +
-              "] due to [" + e.toString + "]", e)
-        }).get
-      }
-
-    newRoutes.toSeq
   }
 
 }

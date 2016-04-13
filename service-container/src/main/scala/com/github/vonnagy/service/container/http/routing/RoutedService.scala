@@ -1,13 +1,14 @@
 package com.github.vonnagy.service.container.http.routing
 
-import akka.actor.{Actor, ActorSystem, Props}
-import com.github.vonnagy.service.container.log.ActorLoggingAdapter
+import akka.ConfigurationException
+import akka.actor._
 import spray.routing._
 import spray.util.LoggingContext
 
 /**
  * Add a set of defined routes
- * @param route
+  *
+  * @param route
  */
 case class AddRoute(route: RoutedEndpoints)
 
@@ -23,13 +24,16 @@ case class GetRoutes()
 
 /**
  * This is the return from the message ``GetRoutes``
- * @param routes the currently defined routes
+  *
+  * @param routes the currently defined routes
  */
 case class Routes(routes: Seq[RoutedEndpoints])
 
 
 object RoutedService {
-  def props(routeEndpoints: Seq[RoutedEndpoints])(implicit system: ActorSystem): Props = Props(classOf[RoutedService], routeEndpoints)
+  def props(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]])(implicit system: ActorSystem): Props = {
+    Props(classOf[RoutedService], routeEndpoints)
+  }
 }
 
 /**
@@ -38,11 +42,11 @@ object RoutedService {
  *
  * @param routeEndpoints the routes to manage
  */
-class RoutedService(val routeEndpoints: Seq[RoutedEndpoints]) extends Actor
+class RoutedService(val routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Actor
   with RoutingHandler with HttpServiceBase {
 
-  implicit val fact = context.system
-  private[routing] var routes = routeEndpoints
+  implicit val fact = context
+  private[routing] var routes = loadRoutes(routeEndpoints)
 
   // The base handler
   val base: Receive = {
@@ -55,7 +59,8 @@ class RoutedService(val routeEndpoints: Seq[RoutedEndpoints]) extends Actor
 
   /**
    * Build the routes from sequence of ``RoutedEndpoints``
-   * @param services the the service that will be used to build the routes
+    *
+    * @param services the the service that will be used to build the routes
    * @return an instance of ``Actor.Receive``
    */
   private[routing] def buildRoute(services: Iterable[RoutedEndpoints]): Route = {
@@ -64,7 +69,8 @@ class RoutedService(val routeEndpoints: Seq[RoutedEndpoints]) extends Actor
 
   /**
    * Add the route and reset the message handler
-   * @param route the route to add
+    *
+    * @param route the route to add
    */
   private[routing] def addRoute(route: RoutedEndpoints): Unit = {
     routes = routes ++ Seq(route)
@@ -73,11 +79,44 @@ class RoutedService(val routeEndpoints: Seq[RoutedEndpoints]) extends Actor
 
   /**
    * Apply the route to create an ``Actor.Receive`` PF.
-   * @param route
+    *
+    * @param route
    * @return an instance of ``Actor.Receive``
    */
   private def applyRoute(route: Route): Actor.Receive = {
     runRoute(route)(exceptionHandler, rejectionHandler, context, RoutingSettings.default, LoggingContext.fromActorRefFactory)
   }
 
+  /**
+    * Load the defined routes
+    */
+  private def loadRoutes(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]): Seq[RoutedEndpoints] = {
+
+    log.info("Setting up all of the routes")
+    val newRoutes =
+      for {
+        route <- routeEndpoints
+      } yield {
+        val ct = route.getConstructors.last
+        val params = ct.getParameterTypes
+
+        val p = params.length match {
+          case 0 => Nil
+          case _ => List(classOf[ActorSystem] -> context.system)
+        }
+        val args = List(classOf[ActorSystem] -> context.system, classOf[ActorRefFactory] -> context)
+
+        context.system.asInstanceOf[ExtendedActorSystem].dynamicAccess
+          .createInstanceFor[RoutedEndpoints](route.getName, args).map({
+          case route =>
+            route
+        }).recover({
+          case e => throw new ConfigurationException(
+            "RoutedEndpoints can't be loaded [" + route.getName +
+              "] due to [" + e.toString + "]", e)
+        }).get
+      }
+
+    newRoutes.toSeq
+  }
 }

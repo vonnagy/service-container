@@ -22,7 +22,7 @@ trait SystemShutdown {
     */
   sys.addShutdownHook {
     if (system != null) {
-      system.log.info("Shutdown hook called: Shutting down the actor system")
+      shutLog.info("Shutdown hook called: Shutting down the actor system")
       shutdownActorSystem(system) {
         // Do nothing since the process is shutting down
       }

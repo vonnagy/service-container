@@ -42,7 +42,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
       healthChecks.foreach(Health(system).addCheck(_))
 
       // Create the root actor that all services will run under
-      val servicesParent = system.actorOf(ServicesManager.props(routeEndpoints, props), "service")
+      val servicesParent = system.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
 
       // Only block here since we are starting the system
       implicit val timeout = Timeout(5 seconds)
