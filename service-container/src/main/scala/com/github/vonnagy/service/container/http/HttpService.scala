@@ -71,7 +71,6 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
   def startHttpServer(routes: Seq[Class[_ <: RoutedEndpoints]]): Unit = {
 
     implicit val timeout = Timeout(2 seconds)
-    //val loadedRoutes = loadRoutes(routes ++ Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints]))
     val loadedRoutes = routes ++ Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints])
     val httpService = context.actorOf(FromConfig.props(RoutedService.props(loadedRoutes)), "http")
 
