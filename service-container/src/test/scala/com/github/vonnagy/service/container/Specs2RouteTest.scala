@@ -1,18 +1,17 @@
-/**
- * This code is here only because spray.io does not support specs2 version 3.x
- * so we need to override some logic in order for testing to compile and operate
- * correctly
- *
- * See the following link for more information:
- * https://groups.google.com/forum/#!topic/spray-user/2T6SBp4OJeI
- */
-package spray.testkit
+package com.github.vonnagy.service.container
 
-import org.specs2.execute.{ Failure, FailureException }
+import akka.http.scaladsl.testkit.{RouteTest, TestFrameworkInterface}
+import org.specs2.execute.{Failure, FailureException}
+import org.specs2.specification.AfterAll
 import org.specs2.specification.core.{Fragments, SpecificationStructure}
 import org.specs2.specification.dsl.ActionDsl
 
-trait Specs2Interface extends TestFrameworkInterface with SpecificationStructure with ActionDsl {
+trait Specs2Interface extends TestFrameworkInterface with SpecificationStructure with ActionDsl with AfterAll {
+
+  def afterAll(): Unit = {
+    cleanUp()
+    super.afterAll()
+  }
 
   def failTest(msg: String) = {
     val trace = new Exception().getStackTrace.toList
