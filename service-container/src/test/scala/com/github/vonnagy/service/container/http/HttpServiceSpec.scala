@@ -1,31 +1,23 @@
 package com.github.vonnagy.service.container.http
 
-import akka.actor.ActorDSL._
+import akka.actor.{ActorSystem, Props}
 import akka.testkit.{TestActorRef, TestProbe}
-import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
+import com.github.vonnagy.service.container.{AkkaTestkitSpecs2Support, TestUtils}
 import com.github.vonnagy.service.container.health.HealthState
+import com.typesafe.config.ConfigFactory
 import org.specs2.mutable.SpecificationLike
-import spray.util.Utils
 
-class HttpServiceSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
+class HttpServiceSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
+  val (a, h, p) = TestUtils.temporaryServerHostnameAndPort()
+  ConfigFactory.parseString(
+    s"""
+      container.http.interface="${h}"
+      container.http.port=${p}
+    """)})) with SpecificationLike {
 
   sequential
-  val (hostname, httpPort) = Utils.temporaryServerHostnameAndPort()
-
   val probe = TestProbe()
-
-  val act = TestActorRef(new Act with HttpService {
-    val httpInterface = hostname
-    val port = httpPort
-
-    become(httpStarting orElse ({
-      case HttpStarted => probe.ref ! HttpStarted
-    }: Receive))
-
-    whenStopping {
-      stopHttpServer
-    }
-  }, "service")
+  val act = TestActorRef[HttpService](Props(new HttpService(Nil)), probe.testActor, "service")
 
   "The HttpService" should {
 
@@ -35,8 +27,8 @@ class HttpServiceSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
     }
 
     "be able to start and Http service on a specified port" in {
-      act.underlyingActor.httpListener.isDefined must beFalse
-      act.underlyingActor.startHttpServer(Nil)
+      act.underlyingActor.httpServer.isDefined must beFalse
+      probe.send(act, HttpStart)
       val msg = probe.expectMsg(HttpStarted)
       msg must be equalTo HttpStarted
       success

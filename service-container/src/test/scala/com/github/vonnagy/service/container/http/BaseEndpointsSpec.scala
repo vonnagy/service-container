@@ -1,18 +1,15 @@
 package com.github.vonnagy.service.container.http
 
-import java.util.concurrent.TimeUnit
+import java.net.InetAddress
 
+import akka.http.scaladsl.model.headers.`Remote-Address`
+import akka.http.scaladsl.model.{RemoteAddress, StatusCodes}
+import akka.http.scaladsl.server.Directives
+import com.github.vonnagy.service.container.Specs2RouteTest
+import com.github.vonnagy.service.container.http.routing.Rejection.NotFoundRejection
 import org.specs2.mutable.Specification
-import org.specs2.specification.AfterAll
-import spray.http.HttpHeaders.`Remote-Address`
-import spray.http.{RemoteAddress, StatusCodes}
-import spray.routing.Directives
-import spray.testkit.Specs2RouteTest
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-
-class BaseEndpointsSpec extends Specification with Directives with Specs2RouteTest with AfterAll {
+class BaseEndpointsSpec extends Specification with Directives with Specs2RouteTest {
 
   val endpoints = new BaseEndpoints
 
@@ -32,15 +29,13 @@ class BaseEndpointsSpec extends Specification with Directives with Specs2RouteTe
     }
 
     "a call to shutdown should return and error due to CIDR rules" in {
-      Post("/shutdown").withHeaders(`Remote-Address`(RemoteAddress("192.168.1.1"))) ~> endpoints.route ~> check {
-        handled must beTrue
-        status must beEqualTo(StatusCodes.NotFound)
+      Post("/shutdown").withHeaders(`Remote-Address`(RemoteAddress(InetAddress.getByName("192.168.1.1")))) ~> endpoints.route ~> check {
+        handled must beFalse
+        rejections.size must beEqualTo(1)
+        rejections.head must be equalTo(NotFoundRejection("The requested resource could not be found"))
       }
     }
 
   }
 
-  def afterAll = {
-    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
-  }
 }

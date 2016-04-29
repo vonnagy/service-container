@@ -8,8 +8,6 @@ import akka.testkit.TestActorRef
 import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import com.github.vonnagy.service.container.metrics.Metrics
 import org.specs2.mutable.SpecificationLike
-import spray.can.Http
-import spray.can.server.Stats
 
 import scala.concurrent.duration._
 
@@ -25,7 +23,7 @@ class HttpMetricsSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
     val listener = context.actorOf(Props(
       new Act {
         become {
-          case Http.GetStats => sender ! Stats(FiniteDuration(1000, TimeUnit.MILLISECONDS), 1000, 1000, 1000, 1000, 1000, 1000, 1000)
+          case _ => sender ! Stats(FiniteDuration(1000, TimeUnit.MILLISECONDS), 1000, 1000, 1000, 1000, 1000, 1000, 1000)
         }
 
       }), "listener-0")

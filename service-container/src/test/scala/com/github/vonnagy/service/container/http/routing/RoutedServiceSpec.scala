@@ -1,41 +1,25 @@
 package com.github.vonnagy.service.container.http.routing
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.ActorDSL._
 import akka.actor._
+import akka.http.scaladsl.model.{HttpEntity, MediaTypes, StatusCodes}
+import akka.http.scaladsl.server.{Directives, Route}
 import akka.testkit.{TestActorRef, TestProbe}
-import com.github.vonnagy.service.container.TestEndpoints
-import com.github.vonnagy.service.container.http.RejectionResponse
+import com.github.vonnagy.service.container.Specs2RouteTest
+import com.github.vonnagy.service.container.http.{DefaultMarshallers, RejectionResponse}
 import org.specs2.mutable.Specification
-import org.specs2.specification.AfterAll
-import spray.http._
-import spray.routing._
-import spray.testkit.Specs2RouteTest
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+class RoutedServiceSpec extends Specification with Directives with Specs2RouteTest {
 
-class RoutedServiceSpec extends Specification with Directives with Specs2RouteTest with AfterAll {
+  val probe = new TestProbe(system)
+  val httpAct = TestActorRef(Props(new Act with RoutedService with DefaultMarshallers {
+    become(routeReceive)
+  }), "http")
+  val svc = httpAct.underlyingActor.asInstanceOf[RoutedService]
 
   def echoComplete[T]: T => Route = { x ⇒ complete(x.toString) }
 
-  val svcAct = actor("service")(new Act {
-    become { case _ =>}
-  })
-
-  val probe = new TestProbe(system)
-  val httpAct = TestActorRef(Props(classOf[RoutedService], Seq(classOf[TestEndpoints])), svcAct, "http")
-  val svc = httpAct.underlyingActor.asInstanceOf[RoutedService]
-
   "The RoutedService" should {
-
-    "allow for routes to be defined by a passed sequence of ``RoutedEndpoints`` instances" in {
-
-      Get("/test") ~> svc.buildRoute(svc.routes) ~> check {
-        responseAs[String] must be equalTo "test"
-      }
-    }
 
     "allow for routes to be added after the system is already loaded" in {
       // This should create the actor and register the endpoints
@@ -91,7 +75,7 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
       val postRoute = new RoutedEndpoints {
         def route = {
           get {
-            path("test4") { ctx => throw new Exception("test")}
+            path("test4") { ctx => throw new Exception("test") }
           }
         }
       }
@@ -100,14 +84,14 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
       probe.expectMsg(RouteAdded)
 
       Get("/test4") ~>
-        svc.sealRoute(svc.buildRoute(svc.routes))(svc.exceptionHandler, svc.rejectionHandler) ~> check {
+        Route.seal(svc.buildRoute(svc.routes))(svc.routeSettings,
+          exceptionHandler = svc.exceptionHandler,
+          rejectionHandler = svc.rejectionHandler) ~> check {
+
         mediaType === MediaTypes.`application/json`
         responseAs[RejectionResponse] must not beNull
       }
     }
   }
 
-  def afterAll = {
-    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
-  }
 }

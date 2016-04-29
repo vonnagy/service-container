@@ -1,27 +1,26 @@
 package com.github.vonnagy.service.container.http.directives
 
-import java.util.concurrent.TimeUnit
+import java.net.InetAddress
 
+import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.{RemoteAddress, StatusCodes}
+import com.github.vonnagy.service.container.Specs2RouteTest
+import com.github.vonnagy.service.container.http.routing.Rejection.NotFoundRejection
 import org.specs2.mutable.Specification
-import org.specs2.specification.AfterAll
-import spray.http.HttpHeaders.`Remote-Address`
-import spray.http._
-import spray.testkit.Specs2RouteTest
-
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 
 /**
- * Created by Ivan von Nagy on 1/20/15.
- */
-class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2RouteTest with AfterAll {
+  * Created by Ivan von Nagy on 1/20/15.
+  */
+class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2RouteTest {
 
   val yeah = complete("Yeah!")
+
+  def remoteAddress(ip: String) = RemoteAddress(InetAddress.getByName(ip))
 
   "CIDRDirectives" should {
 
     "allow call when no allows or denies" in {
-      Get() ~> `Remote-Address`(RemoteAddress("192.168.1.1")) ~> {
+      Get() ~> addHeaders(`Remote-Address`(remoteAddress("192.168.1.1"))) ~> {
         cidrFilter(Seq(), Seq()) {
           yeah
         }
@@ -32,7 +31,7 @@ class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2Ro
     }
 
     "allow call when no denies, but matches allow" in {
-      Get() ~> `Remote-Address`(RemoteAddress("192.168.1.1")) ~> {
+      Get() ~> addHeaders(`Remote-Address`(remoteAddress("192.168.1.1"))) ~> {
         cidrFilter(Seq("192.168.1.1/1"), Seq()) {
           yeah
         }
@@ -43,7 +42,7 @@ class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2Ro
     }
 
     "allow call when does not match deny, but matches allow" in {
-      Get() ~> `Remote-Address`(RemoteAddress("192.168.1.1")) ~> {
+      Get() ~> addHeaders(`Remote-Address`(remoteAddress("192.168.1.1"))) ~> {
         cidrFilter(Seq("192.168.1.1/1"), Seq("10.0.0.1/1")) {
           yeah
         }
@@ -54,24 +53,26 @@ class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2Ro
     }
 
     "disallow call when no denies and does not match allow" in {
-      Get() ~> `Remote-Address`(RemoteAddress("192.168.1.1")) ~> {
+      Get() ~> addHeaders(`Remote-Address`(remoteAddress("192.168.1.1"))) ~> {
         cidrFilter(Seq("127.0.0.1/1"), Seq()) {
           yeah
         }
       } ~> check {
-        handled === true
-        status === StatusCodes.NotFound
+        handled must beFalse
+        rejections.size must beEqualTo(1)
+        rejections.head must be equalTo(NotFoundRejection("The requested resource could not be found"))
       }
     }
 
     "disallow call when matches a deny" in {
-      Get() ~> `Remote-Address`(RemoteAddress("10.0.0.1")) ~> {
+      Get() ~> addHeaders(`Remote-Address`(remoteAddress("10.0.0.1"))) ~> {
         cidrFilter(Seq("192.168.1.1/1"), Seq("10.0.0.1/1")) {
           yeah
         }
       } ~> check {
-        handled === true
-        status === StatusCodes.NotFound
+        handled must beFalse
+        rejections.size must beEqualTo(1)
+        rejections.head must be equalTo(NotFoundRejection("The requested resource could not be found"))
       }
     }
 
@@ -81,13 +82,10 @@ class CIDRDirectivesSpec extends Specification with CIDRDirectives with Specs2Ro
           yeah
         }
       } ~> check {
-        handled === true
-        status === StatusCodes.NotFound
+        handled must beFalse
+        rejections.size must beEqualTo(1)
+        rejections.head must be equalTo(NotFoundRejection("The requested resource could not be found"))
       }
     }
-  }
-
-  def afterAll = {
-    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
   }
 }

@@ -1,9 +1,9 @@
 package com.github.vonnagy.service.container.security
 
+import java.io.File
+
 import com.github.vonnagy.service.container.log.LoggingAdapter
 import com.typesafe.config.{Config, ConfigException}
-
-import scala.reflect.io.File
 
 case class SSLSettings(
                         enabled: Boolean = false,
@@ -21,11 +21,12 @@ case class SSLSettings(
 object SSLSettings extends LoggingAdapter {
 
   /**
-   * Parse the SSL settings based on the passed config and the optional namespace.
-   * @param conf a config instance that is used to parse or locate settings within a specific namespace
-   * @param namespace an optional namespace
-   * @return [[com.github.vonnagy.service.container.security.SSLSettings]] object
-   */
+    * Parse the SSL settings based on the passed config and the optional namespace.
+    *
+    * @param conf      a config instance that is used to parse or locate settings within a specific namespace
+    * @param namespace an optional namespace
+    * @return [[com.github.vonnagy.service.container.security.SSLSettings]] object
+    */
   def parse(conf: Config, namespace: Option[String] = None): SSLSettings = {
     import scala.collection.JavaConversions._
 
@@ -34,13 +35,13 @@ object SSLSettings extends LoggingAdapter {
     val enabled = if (conf.hasPath(s"${space}enabled")) conf.getBoolean(s"${space}enabled") else false
 
     if (enabled) {
-      val keyStore = if (conf.hasPath(s"${space}key-store") && !conf.getString(s"${space}key-store").isEmpty) Some(File(conf.getString(s"${space}key-store"))) else None
+      val keyStore = if (conf.hasPath(s"${space}key-store") && !conf.getString(s"${space}key-store").isEmpty) Some(new File(conf.getString(s"${space}key-store"))) else None
 
       val keyStorePassword = if (conf.hasPath(s"${space}key-store-password") && !conf.getString(s"${space}key-store-password").isEmpty) Some(conf.getString(s"${space}key-store-password")) else None
 
       val keyPassword = if (conf.hasPath(s"${space}key-password") && !conf.getString(s"${space}key-password").isEmpty) Some(conf.getString(s"${space}key-password")) else None
 
-      val trustStore = if (conf.hasPath(s"${space}trust-store") && !conf.getString(s"${space}trust-store").isEmpty) Some(File(conf.getString(s"${space}trust-store"))) else None
+      val trustStore = if (conf.hasPath(s"${space}trust-store") && !conf.getString(s"${space}trust-store").isEmpty) Some(new File(conf.getString(s"${space}trust-store"))) else None
 
       val trustStorePassword = if (conf.hasPath(s"${space}trust-store-password") && !conf.getString(s"${space}trust-store-password").isEmpty) Some(conf.getString(s"${space}trust-store-password")) else None
 

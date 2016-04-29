@@ -10,7 +10,6 @@ trait Specs2Interface extends TestFrameworkInterface with SpecificationStructure
 
   def afterAll(): Unit = {
     cleanUp()
-    super.afterAll()
   }
 
   def failTest(msg: String) = {

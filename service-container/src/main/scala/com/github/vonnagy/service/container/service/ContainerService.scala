@@ -26,7 +26,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
                                  config: Option[Config] = None) extends CoreConfig with SystemShutdown with LoggingAdapter {
 
   // ActorSystem we will use in our application
-  lazy val system = ActorSystem.create("server", getConfig(config))
+  system = Some(ActorSystem.create("server", getConfig(config)))
   var started = false
 
   /**
@@ -39,10 +39,10 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
       started = true
 
       // Update the health check registry
-      healthChecks.foreach(Health(system).addCheck(_))
+      healthChecks.foreach(Health(system.get).addCheck(_))
 
       // Create the root actor that all services will run under
-      val servicesParent = system.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
+      val servicesParent = system.get.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
 
       // Only block here since we are starting the system
       implicit val timeout = Timeout(5 seconds)
@@ -75,6 +75,6 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
    * Get the system's registered health checks
    * @return a list of ``HealthCheck``
    */
-  def registeredHealthChecks(): Seq[HealthCheck] = if (started) Health(system).getChecks else healthChecks
+  def registeredHealthChecks(): Seq[HealthCheck] = if (started) Health(system.get).getChecks else healthChecks
 
 }

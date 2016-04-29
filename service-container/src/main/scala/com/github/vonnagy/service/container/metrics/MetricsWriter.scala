@@ -1,8 +1,8 @@
 package com.github.vonnagy.service.container.metrics
 
 import com.codahale.metrics._
-import net.liftweb.json.JsonDSL._
-import net.liftweb.json._
+import org.json4s.{JsonAST, JObject, JValue}
+import org.json4s.JsonDSL._
 
 import scala.collection.JavaConversions._
 import scala.collection._

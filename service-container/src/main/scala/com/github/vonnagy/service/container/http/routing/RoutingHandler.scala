@@ -1,60 +1,77 @@
 package com.github.vonnagy.service.container.http.routing
 
-import akka.actor.ActorRefFactory
+import akka.http.scaladsl.marshalling._
+import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server._
+import akka.http.scaladsl.settings.RoutingSettings
 import com.github.vonnagy.service.container.http.routing.Rejection.{DuplicateRejection, NotFoundRejection}
 import com.github.vonnagy.service.container.http.{DefaultMarshallers, RejectionResponse}
 import com.github.vonnagy.service.container.log.LoggingAdapter
-import net.liftweb.json.Serialization
-import spray.http.StatusCodes._
-import spray.http.{ContentType, HttpEntity, HttpResponse, MediaTypes}
-import spray.routing._
+import com.typesafe.config.Config
+import org.json4s.jackson.Serialization
 
+import scala.collection.immutable
 import scala.util.control.NonFatal
 
-trait RoutingHandler extends HttpServiceBase with DefaultMarshallers with LoggingAdapter {
+trait RoutingHandler extends Directives with DefaultMarshallers with LoggingAdapter {
 
-  implicit val fact: ActorRefFactory
+  def conf: Config
+  implicit val routeSettings = RoutingSettings(conf)
+  implicit val marshaller: ToEntityMarshaller[AnyRef] = jsonMarshaller
 
   /**
-   * Wrap all Exceptions in the [[com.github.vonnagy.service.container.http.RejectionResponse]] class then marshall as json.
-   */
+    * Wrap all Exceptions in the [[com.github.vonnagy.service.container.http.RejectionResponse]] class then marshall as json.
+    */
   implicit val exceptionHandler = ExceptionHandler {
-    case errors => mapHttpResponse(transformRejection) {
-      (ExceptionHandler.apply {
-        case NonFatal(e) => ctx => {
-          log.error(e.getMessage, e)
-          ctx.complete(InternalServerError, InternalServerError.defaultMessage)
-        }
-      } orElse ExceptionHandler.default)(errors)
+    case IllegalRequestException(info, status) => ctx => {
+      ctx.log.warning("Illegal request {}\n\t{}\n\tCompleting with '{}' response",
+        ctx.request, info.formatPretty, status)
+
+      ctx.complete(RejectionResponse(status.intValue, info.format(routeSettings.verboseErrorMessages), ""))
+    }
+    case NonFatal(e) => ctx => {
+      ctx.log.error(e, "Error during processing of request {}", ctx.request)
+      ctx.complete(RejectionResponse(InternalServerError.intValue,
+        InternalServerError.defaultMessage, "Something bad happened"))
     }
   }
 
   /**
-   * Wrap all Rejections in the [[com.github.vonnagy.service.container.http.RejectionResponse]] class then marshall as json.
-   */
-  implicit val rejectionHandler = RejectionHandler {
-    case rejections => mapHttpResponse(transformRejection) {
-      // Pre-default rejections
-      (RejectionHandler.apply {
-        case NotFoundRejection(errorMsg) :: _ =>
-          complete(NotFound, errorMsg)
-        case DuplicateRejection(errorMsg) :: _ =>
-          complete(BadRequest, errorMsg)
-        case MalformedRequestContentRejection(errorMsg, cause) :: _ =>
-          complete(UnprocessableEntity, errorMsg)
-      } orElse RejectionHandler.Default orElse
-        // Post-default rejections
-        RejectionHandler.apply {
-          case _ :: _ =>
-            complete(NotFound, "The requested resource could not be found.")
-        })(rejections)
+    * Wrap all Rejections in the [[com.github.vonnagy.service.container.http.RejectionResponse]] class then marshall as json.
+    */
+  implicit val rejectionHandler = new RejectionHandler {
+    val orig = RejectionHandler.newBuilder()
+      .handle { case NotFoundRejection(errorMsg) => complete(NotFound, errorMsg) }
+      .handle { case DuplicateRejection(errorMsg) => complete(BadRequest, errorMsg) }
+      .handle { case MalformedRequestContentRejection(errorMsg, cause) => complete(UnprocessableEntity, errorMsg) }
+      .handleNotFound { complete((NotFound, "The requested resource could not be found.")) }
+      .result
+      .seal
+
+    def apply(v1: immutable.Seq[Rejection]): Option[Route] = {
+      val originalResult = orig(v1).getOrElse(complete(StatusCodes.InternalServerError))
+
+      Some(mapResponse(transformExceptionRejection) {
+        originalResult
+      })
     }
   }
 
-  private def transformRejection(response: HttpResponse): HttpResponse = {
-    response.withEntity(HttpEntity(ContentType(MediaTypes.`application/json`),
-      Serialization.write(RejectionResponse(response.status.intValue, response.status.defaultMessage, response.entity.asString))))
-  }
+  private def transformExceptionRejection(response: HttpResponse): HttpResponse = {
+    response.entity match {
+      // If the entity isn't Strict (and it definitely will be), don't bother
+      // converting, just throw an error, because something's weird.
+      case strictEntity: HttpEntity.Strict =>
+        val rej = RejectionResponse(response.status.intValue, response.status.defaultMessage,
+          strictEntity.data.utf8String)
 
+        response.withEntity(HttpEntity(ContentType(MediaTypes.`application/json`),
+          Serialization.write(rej)))
+
+      case other =>
+        throw new Exception("Unexpected entity type")
+    }
+  }
 
 }

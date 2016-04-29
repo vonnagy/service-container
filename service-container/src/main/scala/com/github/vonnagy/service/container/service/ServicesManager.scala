@@ -2,8 +2,9 @@ package com.github.vonnagy.service.container.service
 
 import akka.actor.{Actor, Props, Stash}
 import com.github.vonnagy.service.container.health._
-import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
-import com.github.vonnagy.service.container.http.{HttpService, HttpStarted, HttpStopped}
+import com.github.vonnagy.service.container.http.routing.{RoutedEndpoints}
+import com.github.vonnagy.service.container.http.{HttpService, HttpStart, HttpStarted, HttpStopped}
+import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.github.vonnagy.service.container.metrics.reporting.MetricsReportingManager
 
 case class StatusRunning()
@@ -18,33 +19,30 @@ object ServicesManager {
 
 /**
  * This is the services parent actor that contains all registered services\
+ *
  * @param service The main service
  * @param routeEndpoints The routes to manage
  * @param props The collection of registered services to start
  */
 class ServicesManager(service: ContainerService,
                       routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[Tuple2[String, Props]]) extends Actor
-with HttpService with RegisteredHealthCheckActor with Stash {
-
-  val httpInterface = context.system.settings.config.getString("container.http.interface")
-  val port = context.system.settings.config.getInt("container.http.port")
+  with RegisteredHealthCheckActor with Stash with ActorLoggingAdapter {
 
   override def preStart(): Unit = {
     // Start the Http server
-    startHttpServer(routeEndpoints)
-  }
-
-  override def postStop(): Unit = {
-    stopHttpServer
+    import context.system
+    val http = context.actorOf(HttpService.props(routeEndpoints), "http")
+    http ! HttpStart
   }
 
   def receive = initializing
 
   /**
    * This is the handler when the manager is initializing
-   * @return
+    *
+    * @return
    */
-  def initializing = httpStarting orElse {
+  def initializing = {
     case HttpStarted =>
       unstashAll()
       context.become(running)
@@ -54,7 +52,7 @@ with HttpService with RegisteredHealthCheckActor with Stash {
       startServices
 
     case GetHealth =>
-      sender ! HealthInfo("services", HealthState.DEGRADED, s"The Http service is currently being initialized")
+      sender ! HealthInfo("services", HealthState.DEGRADED, s"The service is currently being initialized")
 
     case m => stash()
 
@@ -62,14 +60,14 @@ with HttpService with RegisteredHealthCheckActor with Stash {
 
   /**
    * This is the handler when the manager is running
-   * @return
+    *
+    * @return
    */
-  def running = httpStopping orElse {
+  def running = {
     case StatusRunning => sender.tell(true, self)
 
     case GetHealth =>
-      sender ! HealthInfo("services", HealthState.OK,
-        s"Currently managing ${context.children.toSeq.length} services (including http)", None, List(getHttpHealth))
+      sender ! HealthInfo("services", HealthState.OK, s"Currently managing ${context.children.toSeq.length} services")
 
     case HttpStopped => context.become(stopped)
 
@@ -83,14 +81,15 @@ with HttpService with RegisteredHealthCheckActor with Stash {
 
   /**
    * This is the handler when the manager is stopped
-   * @return
+    *
+    * @return
    */
   def stopped = {
     case StatusRunning => sender.tell(false, self)
 
     case GetHealth =>
       sender ! HealthInfo("services", HealthState.CRITICAL,
-        s"The Http service is NOT running. It is currently managing ${context.children.toSeq.length} services (including http)", None, List(getHttpHealth))
+        s"Service is stopped. Currently managing ${context.children.toSeq.length} services", None)
 
   }: Receive
 

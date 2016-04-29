@@ -2,14 +2,13 @@ package com.github.vonnagy.service.container.http.routing
 
 import akka.actor.ActorDSL._
 import akka.actor._
-import akka.routing.FromConfig
 import akka.testkit.{TestActorRef, TestProbe}
 import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import org.specs2.mutable.SpecificationLike
 
 /**
- * Created by Ivan von Nagy on 1/15/15.
- */
+  * Created by Ivan von Nagy on 1/15/15.
+  */
 class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
 
   "The RoutedEndpointsActor" should {
@@ -24,7 +23,9 @@ class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with Specificati
       }, "service")
 
       val routeSvc = svc.underlyingActor.context
-        .actorOf(FromConfig.props(RoutedService.props(Seq(classOf[TestRoutedEndpoints]))), "http")
+        .actorOf(Props(new Act with RoutedService {
+          become(routeReceive)
+        }), "http")
 
       val act = TestActorRef(new RoutedEndpointsActor {
         def receive = {
@@ -47,7 +48,6 @@ class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with Specificati
 class TestRoutedEndpoints(implicit val system: ActorSystem,
                           actorRefFactory: ActorRefFactory) extends RoutedEndpoints {
 
-  val i = 0
   override def route = {
     path("route") {
       complete("route")

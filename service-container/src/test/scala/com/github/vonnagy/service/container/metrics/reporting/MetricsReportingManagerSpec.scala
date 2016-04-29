@@ -6,7 +6,6 @@ import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState}
 import com.typesafe.config.ConfigFactory
 import org.specs2.mutable.SpecificationLike
-import org.specs2.specification.AfterAll
 
 /**
  * Created by Ivan von Nagy on 1/14/15.

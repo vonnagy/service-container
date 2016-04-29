@@ -3,14 +3,21 @@ package com.github.vonnagy.service.container.http
 import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorSelection, ActorSystem, Cancellable}
-import akka.pattern.ask
 import akka.util.Timeout
 import com.github.vonnagy.service.container.log.LoggingAdapter
 import com.github.vonnagy.service.container.metrics._
-import spray.can.Http
-import spray.can.server.Stats
 
 import scala.concurrent.duration._
+
+case class Stats(
+                  uptime: FiniteDuration,
+                  totalRequests: Long,
+                  openRequests: Long,
+                  maxOpenRequests: Long,
+                  totalConnections: Long,
+                  openConnections: Long,
+                  maxOpenConnections: Long,
+                  requestTimeouts: Long)
 
 private[http] trait HttpMetrics extends LoggingAdapter {
 
@@ -19,7 +26,7 @@ private[http] trait HttpMetrics extends LoggingAdapter {
   var metricsJob: Option[Cancellable] = None
   var lastStats = Stats(FiniteDuration(0, TimeUnit.MILLISECONDS), 0, 0, 0, 0, 0, 0, 0)
 
-  def httpListener: Option[ActorSelection]
+  /// TODO def httpListener: Option[ActorSelection]
 
   val totConn = Gauge("container.http.connections.total") {
     lastStats.totalConnections
@@ -63,9 +70,11 @@ private[http] trait HttpMetrics extends LoggingAdapter {
     try {
       implicit val dis = system.dispatcher
       implicit val timeout: Timeout = 1.second
-      if (httpListener.isDefined) httpListener.get ? Http.GetStats onSuccess {
-        case x: Stats => lastStats = x
-      }
+      // TODO - No stats
+//      if (httpListener.isDefined) httpListener.get ? Http.GetStats onSuccess {
+//        case x: Stats => lastStats = x
+//      }
+      lastStats = Stats(0 seconds, 0, 0, 0, 0, 0, 0, 0)
     }
     catch {
       case e: Exception =>

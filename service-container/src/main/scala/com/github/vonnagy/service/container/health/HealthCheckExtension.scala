@@ -1,25 +1,28 @@
 package com.github.vonnagy.service.container.health
 
 import akka.actor._
+import org.json4s.DefaultFormats
 
 import scala.collection.mutable
 
 class HealthCheckExtension(system: ExtendedActorSystem) extends Extension {
 
 
-  implicit val formats = net.liftweb.json.DefaultFormats
+  implicit val formats = DefaultFormats
 
   /** The application wide registry. */
   private val registry: mutable.Buffer[HealthCheck] = mutable.Buffer()
 
   /**
    * Get a copy of the registered `HealthCheck` definitions
+ *
    * @return
    */
   def getChecks: Seq[HealthCheck] = registry.toSeq
 
   /**
    * Add a health check to the registry
+ *
    * @param check
    */
   def addCheck(check: HealthCheck): Unit = registry.append(check)

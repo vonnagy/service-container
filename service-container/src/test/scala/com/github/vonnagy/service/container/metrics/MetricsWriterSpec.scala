@@ -1,10 +1,10 @@
 package com.github.vonnagy.service.container.metrics
 
 import com.codahale.metrics.MetricRegistry
-import net.liftweb.json.DefaultFormats
+import com.github.vonnagy.service.container.http.DefaultMarshallers
 import org.specs2.mutable.Specification
 
-class MetricsWriterSpec extends Specification {
+class MetricsWriterSpec extends Specification with DefaultMarshallers {
 
   val reg = new MetricRegistry()
   val writer = new MetricsWriter(reg)
@@ -23,16 +23,12 @@ class MetricsWriterSpec extends Specification {
   "The metrics writer" should {
     "create json for custom metrics" in {
       val json = writer.getMetrics(false)
-
-      implicit val formats = DefaultFormats
       val value = json \ "system" \ "metrics" \ "test.counter"
       value.extract[Int] must be equalTo 10
     }
 
     "create json for custom and jvm metrics" in {
       val json = writer.getMetrics(true)
-
-      implicit val formats = DefaultFormats
       val value = json \ "system" \ "metrics" \ "test.counter"
       value.extract[Int] must be equalTo 10
 

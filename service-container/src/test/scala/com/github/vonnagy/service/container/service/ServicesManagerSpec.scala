@@ -4,12 +4,12 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.{ActorSystem, Terminated}
 import akka.testkit.{TestActorRef, TestProbe}
+import com.github.vonnagy.service.container.TestUtils
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState}
 import com.github.vonnagy.service.container.http.HttpStopped
 import com.typesafe.config.ConfigFactory
 import org.specs2.mutable.Specification
 import org.specs2.specification.AfterAll
-import spray.util.Utils
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -18,7 +18,7 @@ class ServicesManagerSpec extends Specification with AfterAll {
 
   sequential
 
-  val (hostname, httpPort) = Utils.temporaryServerHostnameAndPort()
+  val (address, hostname, httpPort) = TestUtils.temporaryServerHostnameAndPort()
 
   implicit val system = ActorSystem.create("test",
     ConfigFactory.parseString( s"""
@@ -53,12 +53,14 @@ class ServicesManagerSpec extends Specification with AfterAll {
 
       // Hijack all of the messages
       val intercept: PartialFunction[Any, Any] = {
-        case (m @ HttpStopped) => probe.ref ! m; m
+        case m @ HttpStopped => probe.ref ! m; m
         case msg => msg
       }
       act.underlying.become(intercept andThen act.underlyingActor.running, false)
 
-      act.underlyingActor.stopHttpServer
+      // Stop the Http actor
+      act.underlying.actor.context.stop(act.underlying.child("http").get)
+
       probe.expectMsg(HttpStopped)
       probe.send(act, GetHealth)
 

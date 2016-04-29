@@ -6,22 +6,22 @@ object ContainerBuild extends Build {
   val SCALA_VERSION = "2.11.7"
   val JDK = "1.8"
 
-  val AKKA_VERSION    = "2.4.3"
+  val AKKA_VERSION    = "2.4.4"
+  val AKKA_SSL_VERSION = "0.2.1"
   val CONFIG_VERSION  = "1.3.0"
   val JODA_VERSION    = "2.9"
-  val LIFT_VERSION    = "2.6.2"
+  val JSON4S_VERSION  = "3.3.0"
   val LOGBACK_VERSION = "1.1.3"
   val METRICS_VERSION = "3.1.2"
   val SLF4J_VERSION   = "1.7.12"
   val SPECS_VERSION   = "3.6.1"
-  val SPRAY_VERSION   = "1.3.3"
 
   val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
 
   lazy val baseSettings = Seq(
     name := "Service Container",
     organization := "com.github.vonnagy",
-    version := "1.1.1",
+    version := "2.0.0-SNAPSHOT",
     description := "Service Container",
     scalaVersion := SCALA_VERSION,
     crossScalaVersions := Seq("2.10.5", SCALA_VERSION),
@@ -63,19 +63,18 @@ object ContainerBuild extends Build {
   object Dependencies {
 
     object Compile {
-      val sprayCan        = "io.spray"              %%  "spray-can"         % SPRAY_VERSION
-      val sprayHttp       = "io.spray"              %%  "spray-http"        % SPRAY_VERSION
-      val sprayHttpx      = "io.spray"              %%  "spray-httpx"       % SPRAY_VERSION
-      val sprayRouting    = "io.spray"              %%  "spray-routing"     % SPRAY_VERSION
       val config          = "com.typesafe"          %   "config"            % CONFIG_VERSION
       val akkaActor       = "com.typesafe.akka"     %%  "akka-actor"        % AKKA_VERSION
+      val akkaHttp        = "com.typesafe.akka"     %%  "akka-http-core"    % AKKA_VERSION
+      val akkaHttpExp     = "com.typesafe.akka"     %%  "akka-http-experimental" % AKKA_VERSION
       val akkaSlf4j       = "com.typesafe.akka"     %%  "akka-slf4j"        % AKKA_VERSION
       val akkaRemote      = "com.typesafe.akka"     %%  "akka-remote"       % AKKA_VERSION
+      val akkaSSL         = "com.typesafe"          %%  "ssl-config-akka"   % AKKA_SSL_VERSION
       val slf4j           = "org.slf4j"             %   "slf4j-api"         % SLF4J_VERSION
       val logback         = "ch.qos.logback"        %   "logback-classic"   % LOGBACK_VERSION
       val slf4jOverLog4j  = "org.slf4j"             %   "log4j-over-slf4j"  % SLF4J_VERSION
-      val liftJson        = "net.liftweb"           %%  "lift-json"         % LIFT_VERSION
-      val liftExt         = "net.liftweb"           %%  "lift-json-ext"     % LIFT_VERSION
+      val json4sJackson   = "org.json4s"            %%  "json4s-jackson"    % JSON4S_VERSION
+      val json4sExt       = "org.json4s"            %%  "json4s-ext"        % JSON4S_VERSION
       val metricsCore     = "io.dropwizard.metrics" %   "metrics-core"      % METRICS_VERSION
       val metricsJvm      = "io.dropwizard.metrics" %   "metrics-jvm"       % METRICS_VERSION
       val joda            = "joda-time"             %   "joda-time"         % JODA_VERSION
@@ -88,7 +87,7 @@ object ContainerBuild extends Build {
     
     object Test {
       val akkaTest        = "com.typesafe.akka"     %%  "akka-testkit"      % AKKA_VERSION  % "test"
-      val sprayTest       = "io.spray"              %%  "spray-testkit"     % SPRAY_VERSION % "test"
+      val akkaHttpTest    = "com.typesafe.akka"     %%  "akka-http-testkit" % AKKA_VERSION  % "test"
       val specsCore       = "org.specs2"            %%  "specs2-core"       % SPECS_VERSION % "test"
       val specsMock       = "org.specs2"            %%  "specs2-mock"       % SPECS_VERSION % "test"
       val scalazStream    = "org.scalaz.stream"     %%  "scalaz-stream"     % "0.7a"        % "test"
@@ -97,14 +96,13 @@ object ContainerBuild extends Build {
     import Dependencies.Compile._
     import Dependencies.Test._
 
-    val akka = Seq(akkaActor, akkaSlf4j, akkaRemote)
-    val spray = Seq(sprayCan, sprayHttp, sprayHttpx, sprayRouting)
-    val lift = Seq(liftJson, liftExt)
+    val akka = Seq(akkaActor, akkaHttp, akkaHttpExp, akkaRemote, akkaSlf4j, akkaSSL)
+    val json = Seq(json4sJackson, json4sExt)
     val logging = Seq(logback, slf4j, slf4jOverLog4j)
     val metrics = Seq(metricsCore, metricsJvm)
 
-    val base = akka ++ spray ++ lift ++ logging ++ metrics ++ Seq(joda)
-    val test = Seq(akkaTest, sprayTest, specsCore, specsMock, scalazStream)
+    val base = akka ++ json ++ logging ++ metrics ++ Seq(joda)
+    val test = Seq(akkaTest, akkaHttpTest, specsCore, specsMock, scalazStream)
 
     val core = base ++ test
     val reporting = test ++ Seq(metricsStatsd, metricsInflux, metricsDataDog)

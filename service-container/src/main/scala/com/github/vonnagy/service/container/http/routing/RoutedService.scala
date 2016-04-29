@@ -2,8 +2,7 @@ package com.github.vonnagy.service.container.http.routing
 
 import akka.ConfigurationException
 import akka.actor._
-import spray.routing._
-import spray.util.LoggingContext
+import akka.http.scaladsl.server.{RouteConcatenation, Route}
 
 /**
  * Add a set of defined routes
@@ -30,61 +29,48 @@ case class GetRoutes()
 case class Routes(routes: Seq[RoutedEndpoints])
 
 
-object RoutedService {
-  def props(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]])(implicit system: ActorSystem): Props = {
-    Props(classOf[RoutedService], routeEndpoints)
-  }
-}
-
 /**
  * Allows you to construct Spray ``HttpService`` from a concatenation of routes; and wires in the error handler.
  * It also logs all internal server errors using ``ActorLoggingAdapter``.
- *
- * @param routeEndpoints the routes to manage
  */
-class RoutedService(val routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Actor
-  with RoutingHandler with HttpServiceBase {
+trait RoutedService extends RoutingHandler with RouteConcatenation {
+  this: Actor =>
 
-  implicit val fact = context
-  private[routing] var routes = loadRoutes(routeEndpoints)
+  def conf = context.system.settings.config
+  private[routing] var routes =  Seq[RoutedEndpoints]()
 
   // The base handler
-  val base: Receive = {
+  val routeReceive: Receive = {
     case AddRoute(route) => addRoute(route); sender ! RouteAdded
-    case GetRoutes => sender ! Routes(routes.toSeq)
+    case GetRoutes => sender ! Routes(routes)
   }
 
-  // The default receive is the base with the services
-  def receive = applyRoute(buildRoute(routes)) orElse base
+  /**
+    * Load the designated routes and store them for later
+    * @param routeEndpoints
+    */
+  def loadAndBuildRoute(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]): Route = {
+    routes = loadRoutes(routeEndpoints)
+    buildRoute(routes)
+  }
 
   /**
-   * Build the routes from sequence of ``RoutedEndpoints``
+    * Build the routes from sequence of ``RoutedEndpoints``
     *
     * @param services the the service that will be used to build the routes
-   * @return an instance of ``Actor.Receive``
-   */
+    * @return an instance of ``Route``
+    */
   private[routing] def buildRoute(services: Iterable[RoutedEndpoints]): Route = {
     services.map(_.route).reduceLeft(_ ~ _)
   }
 
   /**
-   * Add the route and reset the message handler
+    * Add the route and reset the message handler
     *
     * @param route the route to add
-   */
+    */
   private[routing] def addRoute(route: RoutedEndpoints): Unit = {
     routes = routes ++ Seq(route)
-    context.become(base orElse applyRoute(buildRoute(routes)))
-  }
-
-  /**
-   * Apply the route to create an ``Actor.Receive`` PF.
-    *
-    * @param route
-   * @return an instance of ``Actor.Receive``
-   */
-  private def applyRoute(route: Route): Actor.Receive = {
-    runRoute(route)(exceptionHandler, rejectionHandler, context, RoutingSettings.default, LoggingContext.fromActorRefFactory)
   }
 
   /**

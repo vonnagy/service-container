@@ -2,28 +2,33 @@ package com.github.vonnagy.service.container.http
 
 import java.util.UUID
 
-import net.liftweb.json.JsonAST.JString
-import net.liftweb.json._
-import net.liftweb.json.ext.JodaTimeSerializers
-import spray.http._
-import spray.httpx.LiftJsonSupport
-import spray.httpx.marshalling.{BasicMarshallers, Marshaller, MetaMarshallers}
+import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
+import akka.http.scaladsl.model.MediaTypes
+import com.github.vonnagy.service.container.http.json.Json4sSupport
+import org.json4s.JsonAST.{JNull, JString}
+import org.json4s.ext.JodaTimeSerializers
+import org.json4s.{CustomSerializer, DefaultFormats, JValue, jackson}
 
-trait DefaultMarshallers extends MetaMarshallers with BasicMarshallers {
+trait DefaultMarshallers {
 
-  def liftJson(implicit fmt: Formats): LiftJsonSupport = new LiftJsonSupport {
-    implicit def liftJsonFormats = fmt
-  }
+  import Json4sSupport._
+
+  implicit val serialization = jackson.Serialization
 
   // The implicit formats used for serialization. This can be overridden
-  implicit def jsonFormats = net.liftweb.json.DefaultFormats ++ JodaTimeSerializers.all ++ List(UUIDSerializer)
+  implicit def defaultJsonFormats = DefaultFormats ++ JodaTimeSerializers.all ++ List(UUIDSerializer)
 
-  def jsonUnmarshaller[T: Manifest] = liftJson.liftJsonUnmarshaller[T]
+  def jsonUnmarshaller[T: Manifest] = json4sUnmarshaller
 
-  def jsonMarshaller[T <: AnyRef] = liftJson.liftJsonMarshaller
+  def jsonMarshaller[T <: AnyRef]: ToEntityMarshaller[T] = json4sMarshaller
 
-  def plainMarshaller[T <: Any] =
-    Marshaller.delegate[T, String](ContentTypes.`text/plain`)(_.toString)
+  implicit def jsonValueMarshaller[T <: JValue]: ToEntityMarshaller[T] = json4sJValueMarshaller
+
+  def jsonStringMarshaller[String]: ToEntityMarshaller[String] =
+    Marshaller.StringMarshaller.wrap(MediaTypes.`application/json`)(_.toString)
+
+  def plainMarshaller[T <: Any]: ToEntityMarshaller[T] =
+    Marshaller.StringMarshaller.wrap(MediaTypes.`text/plain`)(_.toString)
 
   case object UUIDSerializer extends CustomSerializer[UUID](format => ( {
     case JString(u) => UUID.fromString(u)
@@ -32,5 +37,6 @@ trait DefaultMarshallers extends MetaMarshallers with BasicMarshallers {
   }, {
     case u: UUID => JString(u.toString)
   }
-      ))
+    ))
+
 }

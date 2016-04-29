@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
   */
 trait SystemShutdown {
 
-  implicit val system: ActorSystem
+  var system: Option[ActorSystem] = None
   private val shutLog = LoggerFactory.getLogger(this.getClass)
 
   /**
@@ -24,7 +24,7 @@ trait SystemShutdown {
     if (system != null) {
       shutLog.info("Shutdown hook called: Shutting down the actor system")
       shutdownActorSystem(system) {
-        // Do nothing since the process is shutting down
+        system = None
       }
     }
   }
@@ -32,14 +32,14 @@ trait SystemShutdown {
   /**
     * Shutdown the actor system
     */
-  private[container] def shutdownActorSystem(system: ActorSystem)(f: => Unit) = {
+  private[container] def shutdownActorSystem(system: Option[ActorSystem])(f: => Unit) = {
 
-    if (system != null) {
+    if (system.isDefined) {
       try {
         shutLog.info("Shutting down the actor system")
-        system.terminate()
+        system.get.terminate()
         // Wait for termination if it is not already complete
-        Await.result(system.whenTerminated, Duration.apply(30, TimeUnit.SECONDS))
+        Await.result(system.get.whenTerminated, Duration.apply(30, TimeUnit.SECONDS))
         shutLog.info("The actor system has terminated")
       }
       catch {

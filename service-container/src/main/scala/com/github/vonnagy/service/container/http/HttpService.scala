@@ -3,88 +3,124 @@ package com.github.vonnagy.service.container.http
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import akka.io.{Tcp, IO}
-import akka.routing.FromConfig
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.{RoutingLog, Route}
+import akka.http.scaladsl.settings.ServerSettings
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.github.vonnagy.service.container.health.{HealthEndpoints, HealthInfo, HealthState}
+import com.github.vonnagy.service.container.health._
 import com.github.vonnagy.service.container.http.routing.{RoutedEndpoints, RoutedService}
 import com.github.vonnagy.service.container.http.security.SSLProvider
 import com.github.vonnagy.service.container.metrics.MetricsEndpoints
 import com.typesafe.config.ConfigFactory
-import spray.can.Http
-import spray.can.server.ServerSettings
-import spray.routing.RouteConcatenation
 
 import scala.concurrent.duration._
-import scala.reflect.ClassTag
-import scala.reflect.runtime.{universe => ru}
+import scala.util.{Success, Failure}
 
+case class Bound(binding: Http.ServerBinding)
+case class BindFailure(ex: Throwable)
+case class Unbound()
+case class UnbindFailure(ex: Throwable)
+
+case class HttpStart()
 case class HttpStarted()
-
 case class HttpStopped()
 
 /**
  * The main Http REST service. It handles the Http server and also setups the registered
  * endpoints.
  */
-trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
-  this: Actor =>
+object HttpService {
+  def props(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]])(implicit system: ActorSystem): Props = {
+    Props(classOf[HttpService], routeEndpoints).withDispatcher("akka.actor.http-dispatcher")
+  }
+}
 
-  implicit def system = context.system
+class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Actor with RegisteredHealthCheckActor
+  with RoutedService with SSLProvider with BaseDirectives with HttpMetrics {
 
-  val httpInterface: String
-  val port: Int
+  import context.dispatcher
+  implicit val materializer = ActorMaterializer()(context)
 
   // Load the server settings and override the spray SSL setting based on what our
   // setting is
   private val spSettings = ServerSettings(ConfigFactory.parseString(s"""spray.can.server.ssl-encryption=${this.sslSettings.enabled}""")
     .withFallback(context.system.settings.config))
 
-  private val httpServer = IO(Http)
+  private[http] var httpServer: Option[Http.ServerBinding] = None
 
-  var httpListener: Option[ActorSelection] = None
+  val httpInterface = context.system.settings.config.getString("container.http.interface")
+  val port = context.system.settings.config.getInt("container.http.port")
 
-  val httpStarting: Receive = {
+  override def postStop(): Unit = {
+    stopHttpServer
+  }
 
-    case Tcp.Bound(_) =>
+  /**
+    * The base receive
+    *
+    * @return
+    */
+  def receive = {
+    // Start the Http server
+    case HttpStart => startHttpServer
+
+    case GetHealth => HealthInfo("http", HealthState.DEGRADED,
+      s"The http service is currently initializing $httpInterface:$port")
+
+    case Bound(binding) =>
       scheduleHttpMetrics(FiniteDuration(10, TimeUnit.SECONDS))
-      httpListener = Some(context.system.actorSelection(sender.path))
-      self ! HttpStarted
+      httpServer = Some(binding)
+      context.become(running)
+      context.parent ! HttpStarted
 
-    case Http.CommandFailed(_: Http.Bind) =>
+    case BindFailure =>
       log.error(s"Error trying to bind to $httpInterface:$port")
       context.stop(self)
   }
 
-  val httpStopping: Receive = {
-    case Http.Unbound =>
-      httpListener = None
-      system.stop(httpServer)
-      self ! HttpStopped
-    case Http.CommandFailed(_: Http.Unbind) =>
-      log.error(s"Error trying to unbind from $httpInterface:$port")
-  }
+  /**
+    * The receive when running
+    * @return
+    */
+  def running = routeReceive orElse {
+    case GetHealth => sender ! getHttpHealth()
+  }: Receive
 
   /**
-   * Start the http server
-   */
-  def startHttpServer(routes: Seq[Class[_ <: RoutedEndpoints]]): Unit = {
+    * Start the http server
+    */
+  def startHttpServer(): Unit = {
 
     implicit val timeout = Timeout(2 seconds)
-    val loadedRoutes = routes ++ Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints])
-    val httpService = context.actorOf(FromConfig.props(RoutedService.props(loadedRoutes)), "http")
+    // Load the routes
+    val initialRoutes = routeEndpoints ++
+      Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints])
+
+    val route = loadAndBuildRoute(initialRoutes)
 
     // a running HttpServer can be bound, unbound and rebound
     // initially to need to tell it where to bind to
     log.info(s"Trying to bind to $httpInterface:$port")
 
-    val bind = Http.Bind(listener = httpService,
-      interface = httpInterface,
-      port = port,
-      backlog = 10000,
-      settings = Some(spSettings))
+    val bindingFuture = Http().bindAndHandleAsync(Route.asyncHandler(route)(
+        routeSettings,
+        spSettings.parserSettings,
+        materializer,
+        RoutingLog.fromActorContext,
+        context.dispatcher,
+        rejectionHandler),
+      httpInterface,
+      port,
+      httpConnectionContext,
+      spSettings)
 
-    httpServer ! bind
+    // Log our failure to bind
+    val me = self
+    bindingFuture onComplete  {
+      case Success(bind) => me ! Bound(bind)
+      case Failure(ex) => me ! BindFailure
+    }
   }
 
   /**
@@ -92,7 +128,24 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
    */
   def stopHttpServer(): Unit = {
     cancelHttpMetrics
-    if (httpListener.isDefined) httpListener.get ! Http.Unbind
+
+    if (httpServer.isDefined) {
+      val me = self
+      httpServer.get.unbind onComplete {
+        case Failure(ex) =>
+          log.error(s"Error trying to unbind from $httpInterface:$port", ex)
+          context.parent ! HttpStopped
+          httpServer = None
+        case _ =>
+          context.parent ! HttpStopped
+          httpServer = None
+      }
+    }
+    else {
+      // Send our self an Unbound message anyways
+      context.parent ! HttpStopped
+      httpServer = None
+    }
   }
 
   /**
@@ -101,7 +154,7 @@ trait HttpService extends RouteConcatenation with HttpMetrics with SSLProvider {
     * @return An instance of `HealthInfo`
    */
   def getHttpHealth(): HealthInfo = {
-    httpListener.isDefined match {
+    httpServer.isDefined match {
       case true => HealthInfo("http", HealthState.OK, s"Currently connected on $httpInterface:$port")
       case false => HealthInfo("http", HealthState.CRITICAL, s"Currently not connected on $httpInterface:$port")
     }

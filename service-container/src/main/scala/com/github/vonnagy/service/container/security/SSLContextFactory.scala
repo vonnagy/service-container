@@ -5,7 +5,7 @@
 
 package com.github.vonnagy.service.container.security
 
-import java.io.{FileNotFoundException, IOException}
+import java.io.{FileInputStream, File, FileNotFoundException, IOException}
 import java.security.{GeneralSecurityException, KeyStore, SecureRandom}
 import javax.net.ssl._
 
@@ -14,7 +14,6 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.remote.RemoteTransportException
 import akka.remote.security.provider.AkkaProvider
 
-import scala.reflect.io.File
 import scala.util.Try
 
 object SSLContextFactory {
@@ -56,7 +55,8 @@ object SSLContextFactory {
           val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
           trustManagerFactory.init({
             val store = KeyStore.getInstance(KeyStore.getDefaultType)
-            val fin = trustStore.inputStream()
+
+            val fin = new FileInputStream(trustStore)
             try store.load(fin, trustStorePassword.toCharArray) finally Try(fin.close())
             store
           })
@@ -99,7 +99,7 @@ object SSLContextFactory {
         val factory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
         factory.init({
           val store = KeyStore.getInstance(KeyStore.getDefaultType)
-          val fin = keyStore.inputStream()
+          val fin = new FileInputStream(keyStore)
           try store.load(fin, keyStorePassword.toCharArray) finally Try(fin.close())
           store
         }, keyPassword.toCharArray)
@@ -110,7 +110,7 @@ object SSLContextFactory {
             val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
             trustManagerFactory.init({
               val store = KeyStore.getInstance(KeyStore.getDefaultType)
-              val fin = trust.inputStream()
+              val fin = new FileInputStream(trust)
               try store.load(fin, pwd) finally Try(fin.close())
               store
             })

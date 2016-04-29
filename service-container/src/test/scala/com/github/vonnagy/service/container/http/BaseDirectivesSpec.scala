@@ -1,24 +1,16 @@
 package com.github.vonnagy.service.container.http
 
-import java.util.concurrent.TimeUnit
-
+import akka.http.scaladsl.marshalling._
+import akka.http.scaladsl.model.headers.Accept
+import akka.http.scaladsl.model.{MediaType, MediaTypes}
+import akka.http.scaladsl.server.{ContentNegotiator, Route, UnacceptedResponseContentTypeRejection}
+import com.github.vonnagy.service.container.Specs2RouteTest
 import org.specs2.mutable.Specification
-import org.specs2.specification.AfterAll
-import spray.http.HttpHeaders.Accept
-import spray.http.{MediaType, ContentType, MediaTypes}
-import spray.routing.{Route, UnacceptedResponseContentTypeRejection}
-import spray.testkit.Specs2RouteTest
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+class BaseDirectivesSpec extends Specification with BaseDirectives with DefaultMarshallers with Specs2RouteTest {
 
-class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2RouteTest with AfterAll {
-
-  val `application/vnd.com.github.vonnagy.container.health-v1+json` = MediaType.custom(mainType = "application",
-    subType = "vnd.com.github.vonnagy.container.health-v1+json",
-    compressible = true)
-
-  MediaTypes.register(`application/vnd.com.github.vonnagy.container.health-v1+json`)
+  val `application/vnd.com.github.vonnagy.container.health-v1+json` =
+    MediaType.custom("application/vnd.com.github.vonnagy.container.health-v1+json", false)
 
   "The base directives" should {
 
@@ -26,35 +18,40 @@ class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2Ro
 
       import MediaTypes._
 
+      implicit val marsh: ToEntityMarshaller[Seq[String]] = jsonMarshaller
+
+      implicit val vndMarsh: ToEntityMarshaller[String] =
+        Marshaller.StringMarshaller.wrap(`application/vnd.com.github.vonnagy.container.health-v1+json`)(_.toString)
+
       val route: Route =
         path("app-json") {
           acceptableMediaTypes(`application/json`, `application/vnd.com.github.vonnagy.container.health-v1+json`) {
-            respondJson {
-              complete("[]")
-            }
+            complete(Seq())
           }
         } ~
-          path("app-custom") {
-            acceptableMediaTypes(`application/json`, `application/vnd.com.github.vonnagy.container.health-v1+json`) {
-              respondWithMediaType(`application/vnd.com.github.vonnagy.container.health-v1+json`) {
-                complete("[]")
-              }
-            }
+        path("app-custom") {
+          acceptableMediaTypes(`application/json`, `application/vnd.com.github.vonnagy.container.health-v1+json`) {
+            complete("[]")
           }
+        }
 
-      Get("/app-json").withHeaders(Accept(`application/json`, `application/vnd.com.github.vonnagy.container.health-v1+json`)) ~> route ~> check {
-        responseAs[String] === "[]"
-        mediaType === MediaTypes.`application/json`
-      }
+      Get("/app-json")
+        .withHeaders(Accept(`application/json`, `application/vnd.com.github.vonnagy.container.health-v1+json`)) ~>
+          route ~> check {
+          responseAs[String] === "[]"
+          mediaType === MediaTypes.`application/json`
+        }
 
-      Get("/app-custom").withHeaders(Accept(`application/json`, `application/vnd.com.github.vonnagy.container.health-v1+json`)) ~> route ~> check {
-        responseAs[String] === "[]"
-        mediaType === `application/vnd.com.github.vonnagy.container.health-v1+json`
-      }
+      Get("/app-custom")
+        .withHeaders(Accept(`application/vnd.com.github.vonnagy.container.health-v1+json`, `application/json`)) ~>
+          route ~> check {
+          responseAs[String] === "[]"
+          mediaType === `application/vnd.com.github.vonnagy.container.health-v1+json`
+        }
 
       Get("/app-json").withHeaders(Accept(`text/plain`)) ~> route ~> check {
-        rejection === UnacceptedResponseContentTypeRejection(Seq(ContentType(`application/json`),
-          ContentType(`application/vnd.com.github.vonnagy.container.health-v1+json`)))
+        rejection === UnacceptedResponseContentTypeRejection(Set(ContentNegotiator.Alternative(`application/json`),
+          ContentNegotiator.Alternative(`application/vnd.com.github.vonnagy.container.health-v1+json`)))
       }
     }
   }
@@ -62,26 +59,21 @@ class BaseDirectivesSpec extends Specification with BaseDirectives with Specs2Ro
   "allow for the use of standard response types" in {
 
     import MediaTypes._
+    implicit val marsh: ToEntityMarshaller[Seq[String]] = jsonMarshaller
 
     Get() ~> {
-      respondJson {
-        complete("[]")
-      }
+      complete(Seq())
     } ~> check {
       mediaType === `application/json`
     }
 
+    implicit val marsh2 = plainMarshaller
     Get() ~> {
-      respondPlain {
-        complete("[]")
-      }
+      complete("[]")
     } ~> check {
       mediaType === `text/plain`
     }
 
   }
 
-  def afterAll = {
-    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
-  }
 }

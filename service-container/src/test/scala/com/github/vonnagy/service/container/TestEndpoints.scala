@@ -1,6 +1,6 @@
 package com.github.vonnagy.service.container
 
-import akka.actor.{ActorRefFactory, ActorSystem, Props}
+import akka.actor.{ActorRefFactory, ActorSystem}
 import com.github.vonnagy.service.container.http.routing._
 
 
@@ -10,14 +10,10 @@ class TestEndpoints(implicit system: ActorSystem,
 
   val route = {
     path("test") {
-      respondPlain {
-        complete("test")
-      }
+      complete("test")
     } ~
       path("test-per-request") {
-        respondPlain {
-          complete("test-complete")
-        }
+        complete("test-complete")
       }
   }
 }

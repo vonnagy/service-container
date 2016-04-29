@@ -1,8 +1,9 @@
 import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.http.scaladsl.marshalling._
+import akka.http.scaladsl.model.MediaTypes
 import com.github.vonnagy.service.container.ContainerBuilder
 import com.github.vonnagy.service.container.http.routing._
 import com.typesafe.config.ConfigFactory
-import spray.http.MediaTypes._
 
 
 object RestHttpSample extends App {
@@ -34,7 +35,7 @@ object RestHttpSample extends App {
                          actorRefFactory: ActorRefFactory) extends RoutedEndpoints {
 
     // Import the default Json marshaller and un-marshaller
-    implicit val marshaller = jsonMarshaller
+    implicit val marshaller: ToEntityMarshaller[AnyRef] = jsonMarshaller
     implicit val unmarshaller = jsonUnmarshaller[Product]
 
     val route = {
@@ -42,27 +43,21 @@ object RestHttpSample extends App {
         pathEndOrSingleSlash {
           get {
             // This is a path like ``http://api.somecompany.com/products`` and will fetch all of the products
-            respondWithMediaType(`application/json`) {
-              complete(Seq(Product(Some(1001), "Widget 1"), Product(Some(1002), "Widget 2")))
-            }
+            complete(Seq(Product(Some(1001), "Widget 1"), Product(Some(1002), "Widget 2")))
           } ~
             post {
               // Simulate the creation of a product. This call is handled in-line and not through the per-request handler.
               entity(as[Product]) { product =>
-                respondWithMediaType(`application/json`) {
-                  complete(Product(Some(1001), product.name))
-                }
+                complete(Product(Some(1001), product.name))
               }
             }
         } ~
           path(IntNumber) { productId =>
             get {
-              acceptableMediaTypes(`application/json`) {
+              acceptableMediaTypes(MediaTypes.`application/json`) {
                 // This is the path like ``http://api.somecompany.com/products/1001`` and will fetch the specified product
-                respondWithMediaType(`application/json`) {
-                  // Push the handling to another context so that we don't block
-                  complete(Product(Some(productId), "Widget 1"))
-                }
+                // Push the handling to another context so that we don't block
+                complete(Product(Some(productId), "Widget 1"))
               }
             }
           }

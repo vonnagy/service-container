@@ -4,9 +4,9 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import com.github.vonnagy.service.container.health.HealthState._
 import com.github.vonnagy.service.container.log.LoggingAdapter
-import net.liftweb.json.Extraction
-import net.liftweb.json.ext.{EnumNameSerializer, JodaTimeSerializers}
 import org.joda.time.DateTime
+import org.json4s.{Extraction, DefaultFormats}
+import org.json4s.ext.{EnumNameSerializer, JodaTimeSerializers}
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -18,15 +18,16 @@ trait HealthProvider extends LoggingAdapter {
   implicit val system: ActorSystem
   implicit val executor: ExecutionContext
 
-  implicit val formats = net.liftweb.json.DefaultFormats + new EnumNameSerializer(HealthState) ++ JodaTimeSerializers.all
+  implicit val formats = DefaultFormats + new EnumNameSerializer(HealthState) ++ JodaTimeSerializers.all
   implicit val timeout = Timeout(5 seconds)
 
   val alerts: mutable.Buffer[HealthRollup] = mutable.Buffer()
 
   /**
-   * Run the health checks and return the current system state
-   * @return a future to an instance of ``ContainerHealth``
-   */
+    * Run the health checks and return the current system state
+    *
+    * @return a future to an instance of ``ContainerHealth``
+    */
   def runChecks: Future[ContainerHealth] = {
 
     log.debug("Checking the system's health")
@@ -56,10 +57,11 @@ trait HealthProvider extends LoggingAdapter {
   }
 
   /**
-   * Rollup the overall status and critical alerts for each check
-   * @param checks
-   * @return
-   */
+    * Rollup the overall status and critical alerts for each check
+    *
+    * @param checks
+    * @return
+    */
   private def rollupStatuses(checks: mutable.Buffer[HealthRollup]): HealthRollup = {
     // Check if all checks are running
     if (alerts.length == 0) {
@@ -74,9 +76,10 @@ trait HealthProvider extends LoggingAdapter {
   }
 
   /**
-   * Rollup alerts for all checks that have a CRITICAL or DEGRADED state
-   * @param info
-   */
+    * Rollup alerts for all checks that have a CRITICAL or DEGRADED state
+    *
+    * @param info
+    */
   private def checkStatuses(info: HealthInfo) {
     def alert(state: HealthState): Boolean = {
       if (state == HealthState.CRITICAL || state == HealthState.DEGRADED) true else false
@@ -95,9 +98,10 @@ trait HealthProvider extends LoggingAdapter {
   }
 
   /**
-   * Send off all of the health checks so the system can gather them
-   * @return a `Future` which contains a sequence of `HealthInfo`
-   */
+    * Send off all of the health checks so the system can gather them
+    *
+    * @return a `Future` which contains a sequence of `HealthInfo`
+    */
   private def sendHealthRequests: Future[Seq[HealthInfo]] = {
 
     val future = Future.traverse(Health(system).getChecks)(h => (h.getHealth).mapTo[HealthInfo])

@@ -19,7 +19,7 @@ class ContainerServiceSpec extends Specification {
       val cont = new ContainerService(Nil, Nil, Nil)
       cont.start
       cont.shutdown
-      cont.system.whenTerminated.isCompleted must beTrue
+      cont.system.get.whenTerminated.isCompleted must beTrue
     }
 
 
