@@ -1,5 +1,6 @@
 package com.github.vonnagy.service.container.service
 
+import scala.util.Properties
 import akka.actor.{Actor, Props, Stash}
 import com.github.vonnagy.service.container.health._
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
@@ -27,7 +28,7 @@ class ServicesManager(service: ContainerService,
 with HttpService with RegisteredHealthCheckActor with Stash {
 
   val httpInterface = context.system.settings.config.getString("container.http.interface")
-  val port = context.system.settings.config.getInt("container.http.port")
+  val port = Properties.envOrElse("PORT", context.system.settings.config.getInt("container.http.port").toString()).toInt
 
   override def preStart(): Unit = {
     // Start the Http server
