@@ -43,6 +43,13 @@ trait HealthProvider extends LoggingAdapter {
         // Rollup the statuses
         val overallHealth = rollupStatuses(alerts)
         alerts.clear()
+
+        overallHealth.state match {
+          case CRITICAL => log.error(s"The system's health is currently critical: ${overallHealth.details}")
+          case DEGRADED => log.warn(s"The system's health is currently degraded: ${overallHealth.details}")
+          case _ => log.debug("The system's health is currently healthy")
+        }
+
         p success ContainerHealth(ContainerInfo.host, ContainerInfo.application,
           ContainerInfo.applicationVersion, ContainerInfo.containerVersion,
           DateTime.now, overallHealth.state, overallHealth.details, checks)
