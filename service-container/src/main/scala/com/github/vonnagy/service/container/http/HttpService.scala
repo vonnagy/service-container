@@ -129,10 +129,14 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
       future onComplete {
         case Failure(ex) =>
           log.error(s"Error trying to unbind", ex)
-          context.parent ! HttpStopped
+          if (context != null) {
+            context.parent ! HttpStopped
+          }
           httpServer = Nil
         case _ =>
-          context.parent ! HttpStopped
+          if (context != null) {
+            context.parent ! HttpStopped
+          }
           httpServer = Nil
       }
     }

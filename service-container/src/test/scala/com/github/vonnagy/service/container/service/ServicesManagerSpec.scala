@@ -41,7 +41,7 @@ class ServicesManagerSpec extends Specification with AfterAll {
 
     "be able to start an Http service on a specified port" in {
       probe.send(act, StatusRunning)
-      probe.expectMsg(true) must beTrue
+      probe.expectMsg(5 seconds, true) must beTrue
     }
 
     "be able to fetch the system's health" in {
@@ -61,7 +61,7 @@ class ServicesManagerSpec extends Specification with AfterAll {
       // Stop the Http actor
       act.underlying.actor.context.stop(act.underlying.child("http").get)
 
-      probe.expectMsg(HttpStopped)
+      probe.expectMsg(5 seconds, HttpStopped)
       probe.send(act, GetHealth)
 
       val msg = probe.expectMsgType[HealthInfo]
