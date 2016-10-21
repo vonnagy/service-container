@@ -4,7 +4,8 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor._
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.{RoutingLog, Route}
+import akka.http.scaladsl.Http.ServerBinding
+import akka.http.scaladsl.server.{Route, RoutingLog}
 import akka.http.scaladsl.settings.ServerSettings
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -12,12 +13,12 @@ import com.github.vonnagy.service.container.health._
 import com.github.vonnagy.service.container.http.routing.{RoutedEndpoints, RoutedService}
 import com.github.vonnagy.service.container.http.security.SSLProvider
 import com.github.vonnagy.service.container.metrics.MetricsEndpoints
-import com.typesafe.config.ConfigFactory
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
-case class Bound(binding: Http.ServerBinding)
+case class Bound(binding: Seq[Http.ServerBinding])
 case class BindFailure(ex: Throwable)
 case class Unbound()
 case class UnbindFailure(ex: Throwable)
@@ -42,15 +43,19 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
   import context.dispatcher
   implicit val materializer = ActorMaterializer()(context)
 
-  // Load the server settings and override the spray SSL setting based on what our
-  // setting is
-  private val spSettings = ServerSettings(ConfigFactory.parseString(s"""spray.can.server.ssl-encryption=${this.sslSettings.enabled}""")
-    .withFallback(context.system.settings.config))
+  // Load the server settings
+  private val spSettings = ServerSettings(context.system.settings.config)
 
-  private[http] var httpServer: Option[Http.ServerBinding] = None
+  private[http] var httpServer: Seq[Http.ServerBinding] = Nil
 
-  val httpInterface = context.system.settings.config.getString("container.http.interface")
-  val port = context.system.settings.config.getInt("container.http.port")
+  val httpSettings = (context.system.settings.config.getString("container.http.port") match {
+      case "disabled" => Nil
+      case p => Seq((context.system.settings.config.getString("container.http.interface"), p.toInt))
+    }) ++
+    (context.system.settings.config.getString("container.https.port") match {
+      case "disabled" => Nil
+      case p => Seq((context.system.settings.config.getString("container.https.interface"), p.toInt))
+    })
 
   override def postStop(): Unit = {
     stopHttpServer
@@ -66,16 +71,16 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
     case HttpStart => startHttpServer
 
     case GetHealth => HealthInfo("http", HealthState.DEGRADED,
-      s"The http service is currently initializing $httpInterface:$port")
+      s"The http service is currently initializing on ${httpSettings.map(h => s"${h._1}:${h._2}").mkString(", ")}")
 
     case Bound(binding) =>
       scheduleHttpMetrics(FiniteDuration(10, TimeUnit.SECONDS))
-      httpServer = Some(binding)
+      httpServer = binding
       context.become(running)
       context.parent ! HttpStarted
 
-    case BindFailure =>
-      log.error(s"Error trying to bind to $httpInterface:$port")
+    case BindFailure(ex) =>
+      log.error(s"Error trying to bind", ex)
       context.stop(self)
   }
 
@@ -99,28 +104,17 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
 
     val route = loadAndBuildRoute(initialRoutes)
 
-    // a running HttpServer can be bound, unbound and rebound
-    // initially to need to tell it where to bind to
-    log.info(s"Trying to bind to $httpInterface:$port")
-
-    val bindingFuture = Http().bindAndHandleAsync(Route.asyncHandler(route)(
-        routeSettings,
-        spSettings.parserSettings,
-        materializer,
-        RoutingLog.fromActorContext,
-        context.dispatcher,
-        rejectionHandler),
-      httpInterface,
-      port,
-      httpConnectionContext,
-      spSettings)
+    val future = Future.traverse(httpSettings) { http =>
+      bindHttp(http._1, http._2, false, route)
+    }
 
     // Log our failure to bind
     val me = self
-    bindingFuture onComplete  {
+    future onComplete {
       case Success(bind) => me ! Bound(bind)
-      case Failure(ex) => me ! BindFailure
+      case Failure(ex) => me ! BindFailure(ex)
     }
+
   }
 
   /**
@@ -129,22 +123,23 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
   def stopHttpServer(): Unit = {
     cancelHttpMetrics
 
-    if (httpServer.isDefined) {
-      val me = self
-      httpServer.get.unbind onComplete {
+    if (!httpServer.isEmpty) {
+      val future = Future.traverse(httpServer) { binding => binding.unbind }
+
+      future onComplete {
         case Failure(ex) =>
-          log.error(s"Error trying to unbind from $httpInterface:$port", ex)
+          log.error(s"Error trying to unbind", ex)
           context.parent ! HttpStopped
-          httpServer = None
+          httpServer = Nil
         case _ =>
           context.parent ! HttpStopped
-          httpServer = None
+          httpServer = Nil
       }
     }
     else {
       // Send our self an Unbound message anyways
       context.parent ! HttpStopped
-      httpServer = None
+      httpServer = Nil
     }
   }
 
@@ -154,11 +149,32 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
     * @return An instance of `HealthInfo`
    */
   def getHttpHealth(): HealthInfo = {
-    httpServer.isDefined match {
-      case true => HealthInfo("http", HealthState.OK, s"Currently connected on $httpInterface:$port")
-      case false => HealthInfo("http", HealthState.CRITICAL, s"Currently not connected on $httpInterface:$port")
+    httpServer.isEmpty match {
+      case false => HealthInfo("http", HealthState.OK,
+        s"Currently connected on ${httpSettings.map(h => s"${h._1}:${h._2}").mkString(", ")}")
+
+      case true => HealthInfo("http", HealthState.CRITICAL,
+        s"Currently not connected on ${httpSettings.map(h => s"${h._1}:${h._2}").mkString(", ")}")
     }
 
   }
 
+  def bindHttp(interface: String, port: Int, ssl: Boolean, route: Route): Future[ServerBinding] = {
+    // a running HttpServer can be bound, unbound and rebound
+    // initially to need to tell it where to bind to
+    log.info(s"Trying to bind to $interface:$port")
+
+    Http().bindAndHandleAsync(Route.asyncHandler(route)(
+      routeSettings,
+      spSettings.parserSettings,
+      materializer,
+      RoutingLog.fromActorContext,
+      context.dispatcher,
+      rejectionHandler),
+      interface,
+      port,
+      getContext(ssl),
+      spSettings)
+
+  }
 }

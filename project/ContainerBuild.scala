@@ -3,18 +3,18 @@ import sbt._
 
 object ContainerBuild extends Build {
 
-  val SCALA_VERSION = "2.11.7"
+  val SCALA_VERSION = "2.11.8"
   val JDK = "1.8"
 
-  val AKKA_VERSION    = "2.4.4"
+  val AKKA_VERSION    = "2.4.11"
   val AKKA_SSL_VERSION = "0.2.1"
   val CONFIG_VERSION  = "1.3.0"
-  val JODA_VERSION    = "2.9"
-  val JSON4S_VERSION  = "3.3.0"
-  val LOGBACK_VERSION = "1.1.3"
+  val JODA_VERSION    = "2.9.4"
+  val JSON4S_VERSION  = "3.4.1"
+  val LOGBACK_VERSION = "1.1.7"
   val METRICS_VERSION = "3.1.2"
-  val SLF4J_VERSION   = "1.7.12"
-  val SPECS_VERSION   = "3.6.1"
+  val SLF4J_VERSION   = "1.7.21"
+  val SPECS_VERSION   = "3.8.5-20161006092037-b43b121"
 
   val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
 
@@ -81,7 +81,6 @@ object ContainerBuild extends Build {
 
       val akkaKafka       = "com.sclasen"           %%  "akka-kafka"        % "0.1.0"
       val metricsStatsd   = "com.github.jjagged"    %   "metrics-statsd"    % "1.0.0"
-      val metricsInflux   = "com.novaquark"         %   "metrics-influxdb"  % "0.3.0" 
       val metricsDataDog  = "org.coursera"          %   "metrics-datadog"   % "1.1.3"
     }
     
@@ -105,7 +104,7 @@ object ContainerBuild extends Build {
     val test = Seq(akkaTest, akkaHttpTest, specsCore, specsMock, scalazStream)
 
     val core = base ++ test
-    val reporting = test ++ Seq(metricsStatsd, metricsInflux, metricsDataDog)
+    val reporting = test ++ Seq(metricsStatsd, metricsDataDog)
     val examples = Seq(akkaKafka)
 
     val overrrides = Set(joda, metricsCore, slf4j)

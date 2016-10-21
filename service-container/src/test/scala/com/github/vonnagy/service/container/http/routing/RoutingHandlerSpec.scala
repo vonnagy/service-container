@@ -22,7 +22,7 @@ class RoutingHandlerSpec extends Specification with Specs2RouteTest with Directi
           reject(DuplicateRejection("test"))
         } ~
           path("malformed") {
-            reject(MalformedRequestContentRejection("test", None))
+            reject(MalformedRequestContentRejection("test", new Exception("test")))
           } ~
           path("cookie") {
             reject(MissingCookieRejection("test"))
