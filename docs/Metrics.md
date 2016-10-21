@@ -64,7 +64,7 @@ The following fields are **required** for every reporter:
 * enabled - If the reporter is enabled then it will be loaded
 * reporting-interval - Each reporter can define it's own reporting interval
 
-The Service Container also provides a library with extra reporters: `DogStatsDReporter`, `InfluxDbReporter`, and `StatsDReporter`. They are container in the `service-container-metrics-reporting`.
+The Service Container also provides a library with extra reporters: `DogStatsDReporter` and `StatsDReporter`. They are container in the `service-container-metrics-reporting`.
 
 ### Custom Reporters
 It is simple to create your own reporter by deriving your own reporter class from `com.github.vonnagy.service.container.metrics.reporting.ScheduledReporter`. 
