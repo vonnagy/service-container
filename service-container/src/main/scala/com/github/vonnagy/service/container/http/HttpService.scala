@@ -141,8 +141,10 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
       }
     }
     else {
-      // Send our self an Unbound message anyways
-      context.parent ! HttpStopped
+      // Send our self an HttpStopped message anyways
+      if (context != null) {
+        context.parent ! HttpStopped
+      }
       httpServer = Nil
     }
   }

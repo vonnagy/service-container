@@ -1,7 +1,5 @@
 package com.github.vonnagy.service.container.service
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.{ActorSystem, Terminated}
 import akka.testkit.{TestActorRef, TestProbe}
 import com.github.vonnagy.service.container.TestUtils
@@ -11,7 +9,6 @@ import com.typesafe.config.ConfigFactory
 import org.specs2.mutable.Specification
 import org.specs2.specification.AfterAll
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 class ServicesManagerSpec extends Specification with AfterAll {
@@ -61,7 +58,7 @@ class ServicesManagerSpec extends Specification with AfterAll {
       // Stop the Http actor
       act.underlying.actor.context.stop(act.underlying.child("http").get)
 
-      probe.expectMsg(5 seconds, HttpStopped)
+      probe.expectMsg(10 seconds, HttpStopped)
       probe.send(act, GetHealth)
 
       val msg = probe.expectMsgType[HealthInfo]
@@ -84,7 +81,7 @@ class ServicesManagerSpec extends Specification with AfterAll {
   }
 
   def afterAll = {
-    Await.result(system.terminate(), Duration(2, TimeUnit.SECONDS))
+    system.terminate().wait()
   }
 
 }
