@@ -32,7 +32,7 @@ trait RoutingHandler extends Directives with DefaultMarshallers with LoggingAdap
     }
     case NonFatal(e) => ctx => {
       ctx.log.error(e, "Error during processing of request {}", ctx.request)
-      ctx.complete(RejectionResponse(InternalServerError.intValue,
+      ctx.complete(InternalServerError, RejectionResponse(InternalServerError.intValue,
         InternalServerError.defaultMessage, "Something bad happened"))
     }
   }
