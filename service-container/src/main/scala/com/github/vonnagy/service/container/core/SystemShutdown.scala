@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.sys.ShutdownHookThread
 
 
 /**
@@ -20,27 +21,33 @@ trait SystemShutdown {
   /**
     * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
     */
-  sys.addShutdownHook {
-    if (system != null) {
+  var shutdownHook: Option[ShutdownHookThread] = Some(sys.addShutdownHook {
+    if (system.isDefined) {
       shutLog.info("Shutdown hook called: Shutting down the actor system")
-      shutdownActorSystem(system) {
-        system = None
-      }
+      shutdownActorSystem(true) {}
     }
-  }
+  })
 
   /**
     * Shutdown the actor system
     */
-  private[container] def shutdownActorSystem(system: Option[ActorSystem])(f: => Unit) = {
+  private[container] def shutdownActorSystem(fromHook: Boolean = false)(f: => Unit): Unit = {
 
     if (system.isDefined) {
       try {
+        // Remove the hook
+        if (shutdownHook.isDefined && !fromHook) {
+          shutdownHook.get.remove
+
+        }
+        shutdownHook = None
+
         shutLog.info("Shutting down the actor system")
         system.get.terminate()
         // Wait for termination if it is not already complete
         Await.result(system.get.whenTerminated, Duration.apply(30, TimeUnit.SECONDS))
         shutLog.info("The actor system has terminated")
+        system = None
       }
       catch {
         case t: Throwable =>

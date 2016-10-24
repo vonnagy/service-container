@@ -57,10 +57,8 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
    * the shutdown process.
    */
   def shutdown(): Unit = {
-    if (started) {
-      shutdownActorSystem(system) {
-        // Do nothing
-      }
+    shutdownActorSystem(false) {
+      // Do nothing
     }
     started = false
   }

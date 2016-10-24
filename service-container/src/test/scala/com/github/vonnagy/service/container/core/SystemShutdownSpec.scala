@@ -11,11 +11,14 @@ class SystemShutdownSpec extends Specification {
   "SystemShutdown" should {
 
     "allow the ActorSystem to be shutdown" in {
-      val sys = Some(ActorSystem())
-      val shut = new SystemShutdown {}
+      val sys = ActorSystem()
+      val shut = new SystemShutdown {
+        system = Some(sys)
+      }
 
-      shut.shutdownActorSystem(sys) {}
-      sys.get.whenTerminated.isCompleted must beTrue
+      shut.shutdownActorSystem(false) {}
+      shut.system.isEmpty must beTrue
+      sys.whenTerminated.isCompleted must beTrue
     }
   }
 }

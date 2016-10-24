@@ -26,6 +26,7 @@ case class UnbindFailure(ex: Throwable)
 case class HttpStart()
 case class HttpStarted()
 case class HttpStopped()
+case class HttpFailed()
 
 /**
  * The main Http REST service. It handles the Http server and also setups the registered
@@ -76,12 +77,14 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
     case Bound(binding) =>
       scheduleHttpMetrics(FiniteDuration(10, TimeUnit.SECONDS))
       httpServer = binding
+      log.info(s"Http server is bound on ${httpServer.map(_.localAddress).mkString(", ")}")
       context.become(running)
       context.parent ! HttpStarted
 
     case BindFailure(ex) =>
+      // Binding failed so notify the parent (ServicesManager) that Http has failed.
       log.error(s"Error trying to bind", ex)
-      context.stop(self)
+      context.parent ! HttpFailed
   }
 
   /**
@@ -125,27 +128,24 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
 
     if (!httpServer.isEmpty) {
       val future = Future.traverse(httpServer) { binding => binding.unbind }
+      val ctx = context
 
       future onComplete {
         case Failure(ex) =>
           log.error(s"Error trying to unbind", ex)
-          if (context != null) {
-            context.parent ! HttpStopped
-          }
           httpServer = Nil
+          ctx.parent ! HttpStopped
+
         case _ =>
-          if (context != null) {
-            context.parent ! HttpStopped
-          }
+          log.info(s"Http server is now unbound from ${httpServer.map(_.localAddress).mkString(", ")}")
           httpServer = Nil
+          ctx.parent ! HttpStopped
       }
     }
     else {
       // Send our self an HttpStopped message anyways
-      if (context != null) {
-        context.parent ! HttpStopped
-      }
       httpServer = Nil
+      context.parent ! HttpStopped
     }
   }
 
@@ -157,7 +157,7 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
   def getHttpHealth(): HealthInfo = {
     httpServer.isEmpty match {
       case false => HealthInfo("http", HealthState.OK,
-        s"Currently connected on ${httpSettings.map(h => s"${h._1}:${h._2}").mkString(", ")}")
+        s"Currently connected on ${httpServer.map(_.localAddress).mkString(", ")}")
 
       case true => HealthInfo("http", HealthState.CRITICAL,
         s"Currently not connected on ${httpSettings.map(h => s"${h._1}:${h._2}").mkString(", ")}")
