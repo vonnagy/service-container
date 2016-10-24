@@ -18,11 +18,11 @@ trait DefaultMarshallers {
   // The implicit formats used for serialization. This can be overridden
   implicit def defaultJsonFormats = DefaultFormats ++ JodaTimeSerializers.all ++ List(UUIDSerializer)
 
-  def jsonUnmarshaller[T: Manifest] = json4sUnmarshaller
+  def jsonUnmarshaller[T: Manifest] = json4sUnmarshaller[T]
 
-  def jsonMarshaller[T <: AnyRef]: ToEntityMarshaller[T] = json4sMarshaller
+  def jsonMarshaller[T <: AnyRef]: ToEntityMarshaller[T] = json4sMarshaller[T]
 
-  implicit def jsonValueMarshaller[T <: JValue]: ToEntityMarshaller[T] = json4sJValueMarshaller
+  implicit def jsonValueMarshaller[T <: JValue]: ToEntityMarshaller[T] = json4sJValueMarshaller[T]
 
   def jsonStringMarshaller[String]: ToEntityMarshaller[String] =
     Marshaller.StringMarshaller.wrap(MediaTypes.`application/json`)(_.toString)

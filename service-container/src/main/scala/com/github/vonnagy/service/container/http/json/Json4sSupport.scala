@@ -16,11 +16,14 @@
 
 package com.github.vonnagy.service.container.http.json
 
+import java.lang.reflect.InvocationTargetException
+
 import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
-import akka.http.scaladsl.model.{HttpCharsets, MediaTypes}
+import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
-import com.github.vonnagy.service.container.http.json.Json4sSupport.ShouldWritePretty
-import org.json4s.{Formats, JValue, Serialization}
+import akka.util.ByteString
+import org.json4s.JsonAST.JValue
+import org.json4s.{Formats, MappingException, Serialization}
 
 /**
   * Automatic to and from JSON marshalling/unmarshalling using an in-scope *Json4s* protocol.
@@ -32,13 +35,9 @@ object Json4sSupport extends Json4sSupport {
   sealed abstract class ShouldWritePretty
 
   object ShouldWritePretty {
-
-    object True extends ShouldWritePretty
-
+    object True  extends ShouldWritePretty
     object False extends ShouldWritePretty
-
   }
-
 }
 
 /**
@@ -48,8 +47,20 @@ object Json4sSupport extends Json4sSupport {
   */
 trait Json4sSupport {
 
-  implicit def json4sUnmarshallerConverter[A: Manifest](serialization: Serialization, formats: Formats): FromEntityUnmarshaller[A] =
-    json4sUnmarshaller(manifest, serialization, formats)
+  import Json4sSupport._
+
+  private val jsonStringUnmarshaller = {
+    Unmarshaller.byteStringUnmarshaller
+      .forContentTypes(`application/json`)
+      .mapWithCharset {
+        case (ByteString.empty, _) => throw Unmarshaller.NoContentException
+        case (data, charset) => data.decodeString(charset.nioCharset.name)
+      }
+  }
+
+  private val jsonStringMarshaller = {
+    Marshaller.stringMarshaller(`application/json`)
+  }
 
   /**
     * HTTP entity => `A`
@@ -57,17 +68,21 @@ trait Json4sSupport {
     * @tparam A type to decode
     * @return unmarshaller for `A`
     */
-  implicit def json4sUnmarshaller[A: Manifest](implicit serialization: Serialization, formats: Formats): FromEntityUnmarshaller[A] =
-    Unmarshaller
-      .byteStringUnmarshaller
-      .forContentTypes(MediaTypes.`application/json`)
-      .mapWithCharset { (data, charset) =>
-        val input = if (charset == HttpCharsets.`UTF-8`) data.utf8String else data.decodeString(charset.nioCharset.name)
-        serialization.read(input)
-      }
-
-  implicit def json4sMarshallerConverter[A <: AnyRef](serialization: Serialization, formats: Formats, shouldWritePretty: ShouldWritePretty = ShouldWritePretty.False): ToEntityMarshaller[A] =
-    json4sMarshaller(serialization, formats, shouldWritePretty)
+  implicit def json4sUnmarshaller[A: Manifest](
+                                                implicit serialization: Serialization,
+                                                formats: Formats
+                                              ): FromEntityUnmarshaller[A] = {
+    jsonStringUnmarshaller.map { data =>
+      serialization.read(data)
+    }.recover(
+      _ =>
+        _ => {
+          case MappingException("unknown error",
+          ite: InvocationTargetException) =>
+            throw ite.getCause
+        }
+    )
+  }
 
   /**
     * `A` => HTTP entity
@@ -75,15 +90,31 @@ trait Json4sSupport {
     * @tparam A type to encode, must be upper bounded by `AnyRef`
     * @return marshaller for any `A` value
     */
-  implicit def json4sMarshaller[A <: AnyRef](implicit serialization: Serialization, formats: Formats, shouldWritePretty: ShouldWritePretty = ShouldWritePretty.False): ToEntityMarshaller[A] =
+  implicit def json4sMarshaller[A <: AnyRef](
+                                              implicit serialization: Serialization,
+                                              formats: Formats,
+                                              shouldWritePretty: ShouldWritePretty = ShouldWritePretty.False
+                                            ): ToEntityMarshaller[A] = {
     shouldWritePretty match {
-      case ShouldWritePretty.False => Marshaller.StringMarshaller.wrap(MediaTypes.`application/json`)(serialization.write[A])
-      case _ => Marshaller.StringMarshaller.wrap(MediaTypes.`application/json`)(serialization.writePretty[A])
+      case ShouldWritePretty.False =>
+        jsonStringMarshaller.compose(serialization.write[A])
+      case ShouldWritePretty.True =>
+        jsonStringMarshaller.compose(serialization.writePretty[A])
     }
+  }
 
-  implicit def json4sJValueMarshaller(implicit serialization: Serialization, formats: Formats, shouldWritePretty: ShouldWritePretty = ShouldWritePretty.False): ToEntityMarshaller[JValue] =
+  implicit def json4sJValueMarshaller[A <: JValue](
+                                                    implicit serialization: Serialization,
+                                                    formats: Formats,
+                                                    shouldWritePretty: ShouldWritePretty = ShouldWritePretty.False
+                                                  ): ToEntityMarshaller[A] = {
+
     shouldWritePretty match {
-      case ShouldWritePretty.False => Marshaller.StringMarshaller.wrap(MediaTypes.`application/json`)(serialization.write[JValue])
-      case _ => Marshaller.StringMarshaller.wrap(MediaTypes.`application/json`)(serialization.writePretty[JValue])
+      case ShouldWritePretty.False =>
+        jsonStringMarshaller.compose(serialization.write[A])
+      case ShouldWritePretty.True =>
+        jsonStringMarshaller.compose(serialization.writePretty[A])
     }
+  }
 }
+
