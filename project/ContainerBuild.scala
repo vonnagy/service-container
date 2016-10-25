@@ -21,7 +21,7 @@ object ContainerBuild extends Build {
   lazy val baseSettings = Seq(
     name := "Service Container",
     organization := "com.github.vonnagy",
-    version := "2.0.0-SNAPSHOT",
+    version := "2.0.0",
     description := "Service Container",
     scalaVersion := SCALA_VERSION,
     crossScalaVersions := Seq("2.10.5", SCALA_VERSION),

@@ -34,7 +34,7 @@ case class HttpFailed()
  */
 object HttpService {
   def props(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]])(implicit system: ActorSystem): Props = {
-    Props(classOf[HttpService], routeEndpoints).withDispatcher("akka.actor.http-dispatcher")
+    Props(classOf[HttpService], routeEndpoints)
   }
 }
 

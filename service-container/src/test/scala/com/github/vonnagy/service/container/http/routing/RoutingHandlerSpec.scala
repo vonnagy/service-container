@@ -1,6 +1,7 @@
 package com.github.vonnagy.service.container.http.routing
 
 import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.server.{Directives, MalformedRequestContentRejection, MissingCookieRejection, Route}
 import com.github.vonnagy.service.container.Specs2RouteTest
 import com.github.vonnagy.service.container.http.routing.Rejection.DuplicateRejection
@@ -21,12 +22,15 @@ class RoutingHandlerSpec extends Specification with Specs2RouteTest with Directi
         path("duplicate") {
           reject(DuplicateRejection("test"))
         } ~
-          path("malformed") {
-            reject(MalformedRequestContentRejection("test", new Exception("test")))
-          } ~
-          path("cookie") {
-            reject(MissingCookieRejection("test"))
-          }
+        path("malformed") {
+          reject(MalformedRequestContentRejection("test", new Exception("test")))
+        } ~
+        path("cookie") {
+          reject(MissingCookieRejection("test"))
+        } ~
+        path("exception") {
+          throw new NullPointerException("test")
+        }
       }
     }
 
@@ -59,6 +63,18 @@ class RoutingHandlerSpec extends Specification with Specs2RouteTest with Directi
           """{"code":400,"message":"The request contains bad syntax or cannot be fulfilled.","details":"Request is missing required cookie 'test'"}""")
       }
     }
+
+    "provide custom exception handlers" in {
+      implicit val exHandler = handler.exceptionHandler
+      val sr = Route.seal(dummyRoute)
+
+      Get("/test/exception") ~> sr ~> check {
+        status must be equalTo InternalServerError
+        contentType must be equalTo `application/json`
+        responseAs[String] must be equalTo(
+          """{"code":500,"message":"There was an internal server error.","details":"Something bad happened"}""")
+      }
+ }
 
   }
 }
