@@ -25,8 +25,7 @@ object Test {
     ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true,
 
     ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := {
-      if (scalaBinaryVersion.value == "2.10") false
-      else true
+      true
     }
   )
 }
