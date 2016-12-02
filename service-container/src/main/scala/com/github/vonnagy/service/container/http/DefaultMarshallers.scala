@@ -5,9 +5,8 @@ import java.util.UUID
 import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
 import akka.http.scaladsl.model.MediaTypes
 import com.github.vonnagy.service.container.http.json.Json4sSupport
-import org.json4s.JsonAST.{JNull, JString}
-import org.json4s.ext.JodaTimeSerializers
-import org.json4s.{CustomSerializer, DefaultFormats, JValue, jackson}
+import org.json4s._
+import org.json4s.ext.{JavaTypesSerializers, JodaTimeSerializers}
 
 trait DefaultMarshallers {
 
@@ -16,7 +15,7 @@ trait DefaultMarshallers {
   implicit val serialization = jackson.Serialization
 
   // The implicit formats used for serialization. This can be overridden
-  implicit def defaultJsonFormats = DefaultFormats ++ JodaTimeSerializers.all ++ List(UUIDSerializer)
+  implicit def defaultJsonFormats = DefaultFormats ++ JodaTimeSerializers.all ++ JavaTypesSerializers.all ++ List(UUIDSerializer)
 
   def jsonUnmarshaller[T: Manifest] = json4sUnmarshaller[T]
 
@@ -30,13 +29,18 @@ trait DefaultMarshallers {
   def plainMarshaller[T <: Any]: ToEntityMarshaller[T] =
     Marshaller.StringMarshaller.wrap(MediaTypes.`text/plain`)(_.toString)
 
+
   case object UUIDSerializer extends CustomSerializer[UUID](format => ( {
-    case JString(u) => UUID.fromString(u)
+    case JString(u) => u.isEmpty match {
+      // Empty string is considered null
+      case true => null
+      case false => UUID.fromString(u)
+    }
     case JNull => null
     case u => UUID.fromString(u.toString)
   }, {
     case u: UUID => JString(u.toString)
   }
-    ))
+  ))
 
 }
