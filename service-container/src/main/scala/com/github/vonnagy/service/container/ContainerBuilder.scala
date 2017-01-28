@@ -3,6 +3,7 @@ package com.github.vonnagy.service.container
 import akka.actor.Props
 import com.github.vonnagy.service.container.health.HealthCheck
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
+import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
 import com.github.vonnagy.service.container.service.ContainerService
 import com.typesafe.config.Config
 
@@ -17,6 +18,7 @@ class ContainerBuilder {
   private val routedEndpoints = ListBuffer.empty[Class[_ <: RoutedEndpoints]]
   private val healthChecks = ListBuffer.empty[HealthCheck]
   private val props = ListBuffer.empty[Tuple2[String, Props]]
+  private val listeners = ListBuffer.empty[ContainerLifecycleListener]
 
   /**
    * Add a custom config
@@ -62,6 +64,16 @@ class ContainerBuilder {
   }
 
   /**
+    * Add any lifecycle listeners that your service requires
+    * @param listener An instance of a HealthCheck
+    * @return the ContainerBuilder
+    */
+  def withListeners(listener:ContainerLifecycleListener*) = {
+    listeners ++= listener
+    this
+  }
+
+  /**
    * Construct the system
    * @return An instance of ContainerServices
    */
@@ -69,6 +81,7 @@ class ContainerBuilder {
     val svc = new ContainerService(routedEndpoints.toSeq,
       healthChecks.toSeq,
       props.toSeq,
+      listeners,
       config) with App
 
     svc

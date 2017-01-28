@@ -1,6 +1,7 @@
 package com.github.vonnagy.service.container
 
 import com.github.vonnagy.service.container.health.{HealthCheck, HealthInfo, HealthState}
+import com.github.vonnagy.service.container.listener.TestContainerLifecycleListener
 import org.specs2.mutable.Specification
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,6 +24,19 @@ class ContainerBuilderSpec extends Specification {
       cont.shutdown
       routes.length must be equalTo 1
     }
+
+    "allow for defining listeners" in {
+
+      val cont = new ContainerBuilder()
+        .withListeners(new TestContainerLifecycleListener())
+        .build
+
+
+      val listeners = cont.listeners
+      cont.shutdown
+      listeners.length must be equalTo 1
+    }
+
 
     "allow for defining health checks" in {
 

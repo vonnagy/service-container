@@ -6,6 +6,7 @@ import akka.util.Timeout
 import com.github.vonnagy.service.container.core.{CoreConfig, SystemShutdown}
 import com.github.vonnagy.service.container.health.{Health, HealthCheck}
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
+import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
 import com.github.vonnagy.service.container.log.LoggingAdapter
 import com.typesafe.config.Config
 
@@ -23,6 +24,7 @@ import scala.concurrent.duration._
 class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
                                  healthChecks: Seq[HealthCheck] = Nil,
                                  props: Seq[Tuple2[String, Props]] = Nil,
+                                 val listeners: Seq[ContainerLifecycleListener] = Nil,
                                  config: Option[Config] = None) extends CoreConfig with SystemShutdown with LoggingAdapter {
 
   // ActorSystem we will use in our application
@@ -48,6 +50,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
       implicit val timeout = Timeout(5 seconds)
       Await.result(servicesParent ? StatusRunning, 5 seconds)
       log.info("The container service has been started")
+      listeners.foreach(_.onStartup(this))
     }
 
   }
@@ -60,6 +63,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
     shutdownActorSystem(false) {
       // Do nothing
     }
+    listeners.foreach(_.onShutdown(this))
     started = false
   }
 
