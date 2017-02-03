@@ -6,7 +6,8 @@ object ContainerBuild extends Build {
   val SCALA_VERSION = "2.11.8"
   val JDK = "1.8"
 
-  val AKKA_VERSION    = "2.4.11"
+  val AKKA_VERSION    = "2.4.16"
+  val AKKA_HTTP_VERSION = "10.0.3"
   val AKKA_SSL_VERSION = "0.2.1"
   val CONFIG_VERSION  = "1.3.0"
   val JODA_VERSION    = "2.9.4"
@@ -64,8 +65,8 @@ object ContainerBuild extends Build {
     object Compile {
       val config          = "com.typesafe"          %   "config"            % CONFIG_VERSION
       val akkaActor       = "com.typesafe.akka"     %%  "akka-actor"        % AKKA_VERSION
-      val akkaHttp        = "com.typesafe.akka"     %%  "akka-http-core"    % AKKA_VERSION
-      val akkaHttpExp     = "com.typesafe.akka"     %%  "akka-http-experimental" % AKKA_VERSION
+      val akkaHttp        = "com.typesafe.akka"     %%  "akka-http-core"    % AKKA_HTTP_VERSION
+      val akkaHttpExp     = "com.typesafe.akka"     %%  "akka-http" % AKKA_HTTP_VERSION
       val akkaSlf4j       = "com.typesafe.akka"     %%  "akka-slf4j"        % AKKA_VERSION
       val akkaRemote      = "com.typesafe.akka"     %%  "akka-remote"       % AKKA_VERSION
       val akkaSSL         = "com.typesafe"          %%  "ssl-config-akka"   % AKKA_SSL_VERSION
@@ -85,7 +86,7 @@ object ContainerBuild extends Build {
     
     object Test {
       val akkaTest        = "com.typesafe.akka"     %%  "akka-testkit"      % AKKA_VERSION  % "test"
-      val akkaHttpTest    = "com.typesafe.akka"     %%  "akka-http-testkit" % AKKA_VERSION  % "test"
+      val akkaHttpTest    = "com.typesafe.akka"     %%  "akka-http-testkit" % AKKA_HTTP_VERSION  % "test"
       val specsCore       = "org.specs2"            %%  "specs2-core"       % SPECS_VERSION % "test"
       val specsMock       = "org.specs2"            %%  "specs2-mock"       % SPECS_VERSION % "test"
       val scalazStream    = "org.scalaz.stream"     %%  "scalaz-stream"     % "0.7a"        % "test"
