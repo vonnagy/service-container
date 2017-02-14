@@ -49,8 +49,8 @@ object ContainerBuild extends Build {
     javacOptions in Compile ++= Seq("-encoding", "UTF-8", "-source", JDK, "-target", JDK,
       "-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options"),
 
-    run in Compile <<= Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run)),
-    runMain in Compile <<= Defaults.runMainTask(fullClasspath in Compile, runner in (Compile, run)),
+    run in Compile := Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run)),
+    runMain in Compile := Defaults.runMainTask(fullClasspath in Compile, runner in (Compile, run)),
 
     resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
 

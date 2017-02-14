@@ -17,7 +17,7 @@ object Test {
 
     // Setup the system to run Scalastyle when running tests
     testScalastyle := org.scalastyle.sbt.ScalastylePlugin.scalastyle.in(sbt.Test).toTask("").value,
-    (test in sbt.Test) <<= (test in sbt.Test) dependsOn testScalastyle,
+    (test in sbt.Test) := (test in sbt.Test) dependsOn testScalastyle,
 
     // Include the code coverage settings
     ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := "<empty>;edazdarevic.*",
