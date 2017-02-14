@@ -1,91 +1,60 @@
 package com.github.vonnagy.service.container
 
-import akka.actor.Props
 import com.github.vonnagy.service.container.health.HealthCheck
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
 import com.github.vonnagy.service.container.service.ContainerService
-import com.typesafe.config.Config
-
-import scala.collection.mutable.ListBuffer
 
 /**
- * This is the main builder for constructing the container service
- */
-class ContainerBuilder {
+  * This is the main builder for constructing the container service
+  */
 
-  private var config: Option[Config] = None
-  private val routedEndpoints = ListBuffer.empty[Class[_ <: RoutedEndpoints]]
-  private val healthChecks = ListBuffer.empty[HealthCheck]
-  private val props = ListBuffer.empty[Tuple2[String, Props]]
-  private val listeners = ListBuffer.empty[ContainerLifecycleListener]
+import akka.actor.{ActorSystem, Props}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 
-  /**
-   * Add a custom config
-   * @param conf An instance of Config
-   * @return the ContainerBuilder
-   */
-  def withConfig(conf: Config): ContainerBuilder = {
-    this.config = Some(conf)
-    this
-  }
+/**
+  * This is the main builder for constructing the container service
+  */
+case class ContainerBuilder(
+                             endpoints: Seq[Class[_ <: RoutedEndpoints]] = Seq.empty,
+                             healthChecks: Seq[HealthCheck] = Seq.empty,
+                             props: Seq[(String, Props)] = Seq.empty,
+                             listeners: Seq[ContainerLifecycleListener] = Seq.empty,
+                             config: Config = ConfigFactory.empty,
+                             system: Option[ActorSystem] = None
+                           ) {
 
-  /**
-   * Add any REST endpoint handlers that your service requires
-   * @param routes An instance of RoutedEndpoints
-   * @return the ContainerBuilder
-   */
-  def withRoutes(routes: Class[_ <: RoutedEndpoints]*): ContainerBuilder = {
-    this.routedEndpoints ++= routes
-    this
-  }
+  def withConfig(conf: Config): ContainerBuilder = copy(config = conf)
 
-  /**
-   * Add any health check handlers that your service requires
-   * @param check An instance of a HealthCheck
-   * @return the ContainerBuilder
-   */
-  def withHealthChecks(check: HealthCheck*): ContainerBuilder = {
-    healthChecks ++= check
-    this
-  }
+  def withRoutes(routes: Class[_ <: RoutedEndpoints]*): ContainerBuilder = copy(endpoints = routes)
 
-  /**
-   * Add any props to create any additional actors for your service. You can also create
-   * actors after building the Container by accessing the `system` property on the `Container`
-   * object
-   * @param prop An instance of ``Tuple2[String, Props]`` which declares the name for the actor and
-   *             how the actor will be created
-   * @return
-   */
-  def withActors(prop: Tuple2[String, Props]*): ContainerBuilder = {
-    props ++= prop
-    this
-  }
+  def withConfigValue(name: String, value: Any): ContainerBuilder =
+    copy(config = this.config.withValue(name, ConfigValueFactory.fromAnyRef(value)))
 
-  /**
-    * Add any lifecycle listeners that your service requires
-    * @param listener An instance of a HealthCheck
-    * @return the ContainerBuilder
-    */
-  def withListeners(listener:ContainerLifecycleListener*) = {
-    listeners ++= listener
-    this
-  }
+  def withHealthChecks(checks: HealthCheck*): ContainerBuilder = copy(healthChecks = checks)
 
-  /**
-   * Construct the system
-   * @return An instance of ContainerServices
-   */
+  def withActors(actors: (String, Props)*): ContainerBuilder = copy(props = actors)
+
+  def withListeners(obs: ContainerLifecycleListener*): ContainerBuilder = copy(listeners = obs)
+
+  def withActorSystem(sys: ActorSystem): ContainerBuilder = copy(system = Some(sys))
+
   def build: ContainerService = {
-    val svc = new ContainerService(routedEndpoints.toSeq,
-      healthChecks.toSeq,
-      props.toSeq,
-      listeners,
-      config) with App
-
+    implicit val actorSystem = system.getOrElse(ActorSystem.create("service-container", config))
+    val svc = new ContainerService(endpoints, healthChecks, props, listeners,
+      Some(config)) with App
     svc
   }
+
+  def validateConfig(paths: String*) = {
+    paths.foreach { path =>
+      if (!config.hasPath(path)) {
+        throw new MissingConfigException(s"Missing required config property: '$path'.")
+      }
+    }
+  }
 }
+
+class MissingConfigException(s: String) extends RuntimeException(s)
 
 
