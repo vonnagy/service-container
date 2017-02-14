@@ -137,8 +137,8 @@ class ServicesManager(service: ContainerService,
 
     // Create the registered services
     props.foreach { p =>
-      log.info("Starting the service {}", p._1)
-      context.actorOf(p._2, p._1)
+      val act = context.actorOf(p._2, p._1)
+      log.info(s"Starting the service ${p._1} at ${act.path}")
     }
   }
 }
