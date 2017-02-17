@@ -1,6 +1,6 @@
 package com.github.vonnagy.service.container.service
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.github.vonnagy.service.container.core.{CoreConfig, SystemShutdown}
@@ -8,11 +8,12 @@ import com.github.vonnagy.service.container.health.{Health, HealthCheck}
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
 import com.github.vonnagy.service.container.log.LoggingAdapter
+import com.github.vonnagy.service.container.service.ServicesManager.{FindService, StatusRunning}
 import com.typesafe.config.Config
 import configs.syntax._
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * This is the main class for the container. It takes several parameters to be used in its construction.
@@ -33,6 +34,8 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
   system = Some(ActorSystem.create("server", getConfig(config)))
   var started = false
 
+  // Create the root actor that all services will run under
+  lazy val servicesParent = system.get.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
 
   /**
     * Start the service which will start the build-in Http service and
@@ -42,12 +45,8 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
 
     if (!started) {
       started = true
-
       // Update the health check registry
       healthChecks.foreach(Health(system.get).addCheck(_))
-
-      // Create the root actor that all services will run under
-      val servicesParent = system.get.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
 
       // Only block here since we are starting the system
       val td = getConfig(config).get[FiniteDuration]("container.startup.timeout").valueOrElse(5 seconds)
@@ -69,6 +68,16 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
       // Do nothing
     }
     started = false
+  }
+
+  /**
+    * Gets a registered service by its name.
+    *
+    * @return an Option containing the ActorRef of the service or None if not found.
+    */
+  def findService(name: String): Future[Option[ActorRef]] = {
+    implicit val timeout = Timeout(1 second)
+    (servicesParent ? FindService(name)).mapTo[Option[ActorRef]]
   }
 
   /**

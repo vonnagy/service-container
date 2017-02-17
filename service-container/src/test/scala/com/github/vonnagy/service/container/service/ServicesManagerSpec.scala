@@ -1,10 +1,11 @@
 package com.github.vonnagy.service.container.service
 
-import akka.actor.{ActorSystem, Terminated}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.testkit.{TestActorRef, TestProbe}
-import com.github.vonnagy.service.container.{AkkaTestkitSpecs2Support, TestUtils}
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState}
 import com.github.vonnagy.service.container.http.HttpStopped
+import com.github.vonnagy.service.container.service.ServicesManager.{FindService, ShutdownService, StatusRunning}
+import com.github.vonnagy.service.container.{AkkaTestkitSpecs2Support, TestUtils}
 import com.typesafe.config.ConfigFactory
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationLike
@@ -12,13 +13,14 @@ import org.specs2.mutable.SpecificationLike
 import scala.concurrent.duration._
 
 class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
-    val http = TestUtils.temporaryServerHostnameAndPort()
-    ConfigFactory.parseString( s"""
+  val http = TestUtils.temporaryServerHostnameAndPort()
+  ConfigFactory.parseString(
+    s"""
         akka.log-dead-letters-during-shutdown=off
         container.http.interface="${http._2}"
         container.http.port=${http._3}
         """).withFallback(ConfigFactory.load())
-  })) with SpecificationLike with Mockito {
+})) with SpecificationLike with Mockito {
 
   sequential
 
@@ -52,9 +54,10 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
 
       // Hijack all of the messages
       val intercept: PartialFunction[Any, Any] = {
-        case m @ HttpStopped =>
+        case m@HttpStopped =>
           act.underlyingActor.log.info(s"Intercepted HttpStopped message")
-          probe.ref ! m; m
+          probe.ref ! m;
+          m
         case msg => msg
       }
 
@@ -81,7 +84,7 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
     }
 
     "be able to shutdown the actor properly" in {
-      probe.watch(act);
+      probe.watch(act)
       act.stop
       probe.expectMsgClass(classOf[Terminated]) must not beNull
     }
@@ -93,6 +96,25 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
       probe.send(act, ShutdownService)
       cont.started must beFalse.eventually(3, 500 milliseconds)
     }
-  }
 
+    "be able to find a registered service by name" in {
+      val props = Seq("test_service" -> Props[TestService])
+      val act = TestActorRef[ServicesManager](ServicesManager.props(containerService, Nil, props), "service3")
+      act.underlying.become(act.underlyingActor.running)
+      probe.send(act, FindService("test_service"))
+      val msg = probe.expectMsgType[Option[ActorRef]]
+      msg.get.path.name must be equalTo ("test_service")
+      val serviceProbe = TestProbe()
+      serviceProbe.send(msg.get, "Hello")
+      val smsg = serviceProbe.expectMsgType[String]
+      smsg must be equalTo ("Hello")
+    }
+  }
+}
+
+private[this] class TestService extends Actor {
+  override def receive: Receive = {
+    case any =>
+      sender ! any
+  }
 }

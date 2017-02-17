@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.japi.Util._
 import com.github.vonnagy.service.container.http.directives.CIDRDirectives
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
-import com.github.vonnagy.service.container.service.ShutdownService
+import com.github.vonnagy.service.container.service.ServicesManager.ShutdownService
 import org.joda.time.{DateTime, DateTimeZone}
 
 
@@ -17,6 +17,7 @@ class BaseEndpoints(implicit system: ActorSystem,
   lazy val serviceActor = system.actorSelection("akka://server/user/service")
 
   implicit val marshaller = plainMarshaller
+
   import actorRefFactory.dispatcher
 
   val route = {

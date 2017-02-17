@@ -1,35 +1,50 @@
 package com.github.vonnagy.service.container.service
 
-import akka.actor.{Actor, Props, Stash}
+import akka.actor.{Actor, ActorContext, ActorRef, Props, Stash}
 import com.github.vonnagy.service.container.health._
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.http.{HttpStopped, _}
-import com.github.vonnagy.service.container.log.ActorLoggingAdapter
+import com.github.vonnagy.service.container.log.{ActorLoggingAdapter, LoggingAdapter}
 import com.github.vonnagy.service.container.metrics.reporting.MetricsReportingManager
+import com.github.vonnagy.service.container.service.ServicesManager._
 
-case class StatusRunning()
-case class ShutdownService(exit: Boolean = false)
 
 object ServicesManager {
   def props(service: ContainerService,
-            routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[Tuple2[String, Props]]): Props =
+            routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[(String, Props)]): Props =
     Props(classOf[ServicesManager], service, routeEndpoints, props).withDispatcher("akka.actor.service-dispatcher")
+
+  case object StatusRunning
+
+  case class ShutdownService(exit: Boolean = false)
+
+  case class FindService(name: String)
+
 }
 
 /**
- * This is the services parent actor that contains all registered services\
- *
- * @param service The main service
- * @param routeEndpoints The routes to manage
- * @param props The collection of registered services to start
- */
+  * This is the services parent actor that contains all registered services\
+  *
+  * @param service        The main service
+  * @param routeEndpoints The routes to manage
+  * @param props          The collection of registered services to start
+  */
 class ServicesManager(service: ContainerService,
-                      routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[Tuple2[String, Props]]) extends Actor
+                      routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[(String, Props)]) extends Actor
   with RegisteredHealthCheckActor with Stash with ActorLoggingAdapter {
 
   // This is a flag so use when the system is explicitly asked to shutdown. `None` means not shutting down,
   // `Some(true)` means call exit after shut down, `Some(false)` means don't call exit after shut down.
   var shutDownAndExit: Option[Boolean] = None
+
+  //add the internal services to the ones provided by the user
+  private val fprops = props :+ ("metrics_reporting_manager" -> MetricsReportingManager.props())
+
+  private lazy val services: Map[String, ActorRef] = Map(fprops.map { p =>
+    val svc = context.actorOf(p._2, p._1)
+    log.info(s"Started the service ${p._1} at ${svc.path}")
+    p._1 -> svc
+  }: _*)
 
   override def preStart(): Unit = {
     // Start the Http server
@@ -40,10 +55,10 @@ class ServicesManager(service: ContainerService,
   def receive = initializing
 
   /**
-   * This is the handler when the manager is initializing
+    * This is the handler when the manager is initializing
     *
     * @return
-   */
+    */
   def initializing = {
     // Http binding failed so we will change into `stopped` mode. This will cause a CRITICAL health status
     // and thus the service should be restarted.
@@ -54,8 +69,7 @@ class ServicesManager(service: ContainerService,
       context.become(running)
       log.info("Http service has started")
 
-      // Start the registered services (i.e. Actors)
-      startServices
+      log.info(s"Initialized ${services.size} services.")
 
     case GetHealth =>
       sender ! HealthInfo("services", HealthState.DEGRADED, s"The service is currently being initialized")
@@ -65,12 +79,15 @@ class ServicesManager(service: ContainerService,
   }: Receive
 
   /**
-   * This is the handler when the manager is running
+    * This is the handler when the manager is running
     *
     * @return
-   */
+    */
   def running = {
     case StatusRunning => sender.tell(true, self)
+
+    case FindService(name) =>
+      sender ! services.get(name)
 
     case GetHealth =>
       sender ! HealthInfo("services", HealthState.OK, s"Currently managing ${context.children.toSeq.length} services")
@@ -115,10 +132,10 @@ class ServicesManager(service: ContainerService,
   }: Receive
 
   /**
-   * This is the handler when the manager is stopped
+    * This is the handler when the manager is stopped
     *
     * @return
-   */
+    */
   def stopped = {
     case StatusRunning => sender.tell(false, self)
 
@@ -128,17 +145,4 @@ class ServicesManager(service: ContainerService,
 
   }: Receive
 
-  /**
-   * Start the registered services
-   */
-  private def startServices(): Unit = {
-    // Start the metrics reporters
-    context.actorOf(MetricsReportingManager.props())
-
-    // Create the registered services
-    props.foreach { p =>
-      val act = context.actorOf(p._2, p._1)
-      log.info(s"Starting the service ${p._1} at ${act.path}")
-    }
-  }
 }
