@@ -17,7 +17,6 @@ class BaseEndpoints(implicit system: ActorSystem,
   lazy val serviceActor = system.actorSelection("akka://server/user/service")
 
   implicit val marshaller = plainMarshaller
-
   import actorRefFactory.dispatcher
 
   val route = {
