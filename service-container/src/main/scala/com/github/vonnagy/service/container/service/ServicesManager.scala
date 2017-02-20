@@ -1,24 +1,56 @@
 package com.github.vonnagy.service.container.service
 
-import akka.actor.{Actor, ActorContext, ActorRef, Props, Stash}
+import akka.actor.{Actor, ActorNotFound, ActorRef, ActorSelection, ActorSystem, Props, Stash}
+import akka.pattern.ask
+import akka.util.Timeout
 import com.github.vonnagy.service.container.health._
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.http.{HttpStopped, _}
-import com.github.vonnagy.service.container.log.{ActorLoggingAdapter, LoggingAdapter}
+import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.github.vonnagy.service.container.metrics.reporting.MetricsReportingManager
-import com.github.vonnagy.service.container.service.ServicesManager._
 
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 object ServicesManager {
+
   def props(service: ContainerService,
             routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[(String, Props)]): Props =
     Props(classOf[ServicesManager], service, routeEndpoints, props).withDispatcher("akka.actor.service-dispatcher")
+
+  /**
+    * Looks up a service in the currently materialized ServiceManager.
+    *
+    * @param name The name of the service.
+    * @param servicesManagerPath The service manager actor path in the system.
+    *
+    * The result is returned as a Future that is completed with the [[ActorRef]]
+    * if such a service exists. It is completed with failure [[ActorNotFound]] if
+    * no such actor exists or there is no service manager in the path specified.
+    */
+  def findService(name: String, servicesManagerPath: String = "server/user/service")
+                 (implicit system: ActorSystem): Future[ActorRef] = {
+    implicit val timeout = Timeout(1 second)
+    implicit val ec = system.dispatcher
+    val serviceManager = system.actorSelection(s"akka://$servicesManagerPath")
+
+    //we need to resolve so that the future resolves to a Failure (and not to a dead letter queue)
+    serviceManager.resolveOne().flatMap(ref => (ref ? FindService(name))
+      .mapTo[Option[ActorRef]]).flatMap { svc =>
+      svc match {
+        case Some(act) => Future.successful(act)
+        case None => Future.failed(ServiceNotFound(name))
+      }
+    }
+  }
 
   case object StatusRunning
 
   case class ShutdownService(exit: Boolean = false)
 
   case class FindService(name: String)
+
+  final case class ServiceNotFound(name:String) extends RuntimeException(s"Service '$name' not found.")
 
 }
 
@@ -32,6 +64,8 @@ object ServicesManager {
 class ServicesManager(service: ContainerService,
                       routeEndpoints: Seq[Class[_ <: RoutedEndpoints]], props: Seq[(String, Props)]) extends Actor
   with RegisteredHealthCheckActor with Stash with ActorLoggingAdapter {
+
+  import com.github.vonnagy.service.container.service.ServicesManager._
 
   // This is a flag so use when the system is explicitly asked to shutdown. `None` means not shutting down,
   // `Some(true)` means call exit after shut down, `Some(false)` means don't call exit after shut down.

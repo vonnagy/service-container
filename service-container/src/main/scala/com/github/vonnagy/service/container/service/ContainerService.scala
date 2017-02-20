@@ -1,6 +1,6 @@
 package com.github.vonnagy.service.container.service
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.github.vonnagy.service.container.core.{CoreConfig, SystemShutdown}
@@ -8,12 +8,12 @@ import com.github.vonnagy.service.container.health.{Health, HealthCheck}
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
 import com.github.vonnagy.service.container.log.LoggingAdapter
-import com.github.vonnagy.service.container.service.ServicesManager.{FindService, StatusRunning}
+import com.github.vonnagy.service.container.service.ServicesManager.StatusRunning
 import com.typesafe.config.Config
 import configs.syntax._
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 /**
   * This is the main class for the container. It takes several parameters to be used in its construction.
@@ -68,16 +68,6 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
       // Do nothing
     }
     started = false
-  }
-
-  /**
-    * Gets a registered service by its name.
-    *
-    * @return an Option containing the ActorRef of the service or None if not found.
-    */
-  def findService(name: String): Future[Option[ActorRef]] = {
-    implicit val timeout = Timeout(1 second)
-    (servicesParent ? FindService(name)).mapTo[Option[ActorRef]]
   }
 
   /**
