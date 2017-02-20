@@ -8,6 +8,7 @@ import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.http.{HttpStopped, _}
 import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.github.vonnagy.service.container.metrics.reporting.MetricsReportingManager
+import com.github.vonnagy.service.container.service.ServicesManager.ServiceNotFound
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -19,14 +20,15 @@ object ServicesManager {
     Props(classOf[ServicesManager], service, routeEndpoints, props).withDispatcher("akka.actor.service-dispatcher")
 
   /**
-    * Looks up a service in the currently materialized ServiceManager.
+    * Looks up a service in the currently materialized ServicesManager.
     *
     * @param name The name of the service.
     * @param servicesManagerPath The service manager actor path in the system.
     *
     * The result is returned as a Future that is completed with the [[ActorRef]]
-    * if such a service exists. It is completed with failure [[ActorNotFound]] if
-    * no such actor exists or there is no service manager in the path specified.
+    * if such a service exists. It is completed with failure [[ServiceNotFound]] if
+    * no such service(actor) with that name exists
+    * or if there is no service manager in the path specified.
     */
   def findService(name: String, servicesManagerPath: String = "server/user/service")
                  (implicit system: ActorSystem): Future[ActorRef] = {
