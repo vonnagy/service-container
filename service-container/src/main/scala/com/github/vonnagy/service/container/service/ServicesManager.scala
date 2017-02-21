@@ -1,6 +1,6 @@
 package com.github.vonnagy.service.container.service
 
-import akka.actor.{Actor, ActorNotFound, ActorRef, ActorSelection, ActorSystem, Props, Stash}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props, Stash}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.github.vonnagy.service.container.health._
@@ -8,7 +8,6 @@ import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.http.{HttpStopped, _}
 import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.github.vonnagy.service.container.metrics.reporting.MetricsReportingManager
-import com.github.vonnagy.service.container.service.ServicesManager.ServiceNotFound
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
