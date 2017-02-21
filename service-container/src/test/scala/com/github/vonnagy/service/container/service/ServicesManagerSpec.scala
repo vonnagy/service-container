@@ -59,7 +59,7 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
       val intercept: PartialFunction[Any, Any] = {
         case m@HttpStopped =>
           act.underlyingActor.log.info(s"Intercepted HttpStopped message")
-          probe.ref ! m;
+          probe.ref ! m
           m
         case msg => msg
       }
