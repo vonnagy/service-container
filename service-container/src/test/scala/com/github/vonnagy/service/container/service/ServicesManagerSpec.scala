@@ -1,24 +1,29 @@
 package com.github.vonnagy.service.container.service
 
-import akka.actor.{ActorSystem, Terminated}
+import akka.actor.{Actor, ActorNotFound, ActorRef, ActorSystem, Props, Terminated}
 import akka.testkit.{TestActorRef, TestProbe}
-import com.github.vonnagy.service.container.{AkkaTestkitSpecs2Support, TestUtils}
+import akka.util.Timeout
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState}
 import com.github.vonnagy.service.container.http.HttpStopped
+import com.github.vonnagy.service.container.service.ServicesManager.{FindService, ServiceNotFound, ShutdownService, StatusRunning}
+import com.github.vonnagy.service.container.{AkkaTestkitSpecs2Support, TestUtils}
 import com.typesafe.config.ConfigFactory
 import org.specs2.mock.Mockito
 import org.specs2.mutable.SpecificationLike
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Failure
 
 class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
-    val http = TestUtils.temporaryServerHostnameAndPort()
-    ConfigFactory.parseString( s"""
+  val http = TestUtils.temporaryServerHostnameAndPort()
+  ConfigFactory.parseString(
+    s"""
         akka.log-dead-letters-during-shutdown=off
         container.http.interface="${http._2}"
         container.http.port=${http._3}
         """).withFallback(ConfigFactory.load())
-  })) with SpecificationLike with Mockito {
+})) with SpecificationLike with Mockito {
 
   sequential
 
@@ -52,9 +57,10 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
 
       // Hijack all of the messages
       val intercept: PartialFunction[Any, Any] = {
-        case m @ HttpStopped =>
+        case m@HttpStopped =>
           act.underlyingActor.log.info(s"Intercepted HttpStopped message")
-          probe.ref ! m; m
+          probe.ref ! m
+          m
         case msg => msg
       }
 
@@ -81,7 +87,7 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
     }
 
     "be able to shutdown the actor properly" in {
-      probe.watch(act);
+      probe.watch(act)
       act.stop
       probe.expectMsgClass(classOf[Terminated]) must not beNull
     }
@@ -93,6 +99,54 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
       probe.send(act, ShutdownService)
       cont.started must beFalse.eventually(3, 500 milliseconds)
     }
-  }
 
+    "be able to find a registered service by name" in {
+      val props = Seq("test_service" -> Props[TestService])
+      val act = TestActorRef[ServicesManager](ServicesManager.props(containerService, Nil, props), "service3")
+      act.underlying.become(act.underlyingActor.running)
+      probe.send(act, FindService("test_service"))
+      val msg = probe.expectMsgType[Option[ActorRef]]
+      msg.get.path.name must be equalTo ("test_service")
+      val serviceProbe = TestProbe()
+      serviceProbe.send(msg.get, "Hello")
+      val smsg = serviceProbe.expectMsgType[String]
+      smsg must be equalTo ("Hello")
+    }
+
+    "be able to find a registered service by name using the companion object" in {
+      import akka.pattern.ask
+      import system.dispatcher
+      implicit val timeout = Timeout(1 second)
+      val props = Seq("test_service_cp" -> Props[TestService])
+      val act = TestActorRef[ServicesManager](ServicesManager.props(containerService, Nil, props), "service4")
+      act.underlying.become(act.underlyingActor.running)
+      val service = ServicesManager.findService("test_service_cp", "test/user/service4")
+      Await.result(service.map(_.path.name), 1 second) must be_==("test_service_cp")
+      Await.result(service.flatMap(_ ? "Hello World"), 1 second) must be_==("Hello World")
+    }
+
+    "return a failure when using the wrong service manager path" in {
+      implicit val timeout = Timeout(1 second)
+      val act = TestActorRef[ServicesManager](ServicesManager.props(containerService, Nil, Nil), "service5")
+      act.underlying.become(act.underlyingActor.running)
+      val service = ServicesManager.findService("test_cp", "test/user/service_wrong")
+      service.value.get must beAnInstanceOf[Failure[ActorNotFound]].eventually
+    }
+
+    "return a failure when a service can't be found" in {
+      implicit val timeout = Timeout(1 second)
+      val props = Seq("test_service_cp" -> Props[TestService])
+      val act = TestActorRef[ServicesManager](ServicesManager.props(containerService, Nil, props), "service6")
+      act.underlying.become(act.underlyingActor.running)
+      val service = ServicesManager.findService("unknown_service", "test/user/service6")
+      service.value.get must beAnInstanceOf[Failure[ServiceNotFound]].eventually
+    }
+  }
+}
+
+private[this] class TestService extends Actor {
+  override def receive: Receive = {
+    case any =>
+      sender ! any
+  }
 }

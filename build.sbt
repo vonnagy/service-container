@@ -1,4 +1,4 @@
-
+val CONTAINER_VERSION = "2.0.2"
 val SCALA_VERSION = "2.11.8"
 val JDK = "1.8"
 
@@ -7,7 +7,7 @@ val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
 lazy val baseSettings = Seq(
   name := "Service Container",
   organization := "com.github.vonnagy",
-  version := "2.0.2",
+  version := CONTAINER_VERSION,
   description := "Service Container",
   scalaVersion := SCALA_VERSION,
   packageOptions in (Compile, packageBin) +=

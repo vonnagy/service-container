@@ -8,6 +8,7 @@ import com.github.vonnagy.service.container.health.{Health, HealthCheck}
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
 import com.github.vonnagy.service.container.log.LoggingAdapter
+import com.github.vonnagy.service.container.service.ServicesManager.StatusRunning
 import com.typesafe.config.Config
 import configs.syntax._
 
@@ -33,6 +34,8 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
   system = Some(ActorSystem.create("server", getConfig(config)))
   var started = false
 
+  // Create the root actor that all services will run under
+  lazy val servicesParent = system.get.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
 
   /**
     * Start the service which will start the build-in Http service and
@@ -42,12 +45,8 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
 
     if (!started) {
       started = true
-
       // Update the health check registry
       healthChecks.foreach(Health(system.get).addCheck(_))
-
-      // Create the root actor that all services will run under
-      val servicesParent = system.get.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
 
       // Only block here since we are starting the system
       val td = getConfig(config).get[FiniteDuration]("container.startup.timeout").valueOrElse(5 seconds)
