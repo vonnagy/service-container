@@ -1,5 +1,3 @@
-import java.net.URL
-
 import sbt.Keys._
 import sbt._
 
@@ -24,29 +22,29 @@ object Publish {
     publishArtifact in sbt.Test := false,
 
     // Maven central cannot allow other repos.
-    pomIncludeRepository := { _ => false},
+    pomIncludeRepository := { _ => false },
 
     /**
-     * We load the Sonatype credentials from the current sbt version folder (e.g. ``~/.sbt/0.13/sonatype.sbt``) file. This file must look
-     * like the following:
-     * credentials += Credentials("Sonatype Nexus Repository Manager",
-     * "oss.sonatype.org",
-     * "<your username>",
-     * "<your password>")
-     */
+      * We load the Sonatype credentials from the current sbt version folder (e.g. ``~/.sbt/0.13/sonatype.sbt``) file. This file must look
+      * like the following:
+      * credentials += Credentials("Sonatype Nexus Repository Manager",
+      * "oss.sonatype.org",
+      * "<your username>",
+      * "<your password>")
+      */
 
     // When publishing remotely, use these settings
-    publishTo <<= version { v: String =>
+    publishTo := {
       val nexus = "https://oss.sonatype.org/"
-      // versions that end with ``SNAPSHOT`` go to the Snapshots repository on Sonatype;
-      // anything else goes to releases on Sonatype.
-      if (v.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "content/repositories/snapshots")
-      else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
     },
 
     /**
-     * We construct _proper_ Maven-esque POMs to be able to release on Maven.
-     */
+      * We construct _proper_ Maven-esque POMs to be able to release on Maven.
+      */
     pomExtra := (
       <url>https://github.com/vonnagy/service-container</url>
         <licenses>
