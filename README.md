@@ -6,7 +6,7 @@ Service Container
 [<img src="https://img.shields.io/maven-central/v/com.github.vonnagy/service-container_2.10.svg?label=latest%20release%20for%202.10"/>](http://search.maven.org/#search%7Cga%7C1%7Cg%3Acom.github.vonnagy%20a%3Aservice-container_2.10)
 [<img src="https://img.shields.io/maven-central/v/com.github.vonnagy/service-container_2.11.svg?label=latest%20release%20for%202.11"/>](http://search.maven.org/#search%7Cga%7C1%7Cg%3Acom.github.vonnagy%20a%3Aservice-container_2.11)
 
-The service container is a lightweight framework that provides the ability to build microservices. It contains a built-in Http server and utilizes both [Akka](http://akka.io/) and [Spray](http://spray.io/) at it's core.
+The service container is a lightweight framework that provides the ability to build microservices. It contains a built-in Http server and utilizes both [Akka](http://doc.akka.io/docs/akka/2.4/scala.html?_ga=1.42508261.1791590507.1484343870) and [Akka HTTP](http://doc.akka.io/docs/akka-http/current/scala.html) at it's core.
 The service container is fully SaaS ready as it provides functionality for recording metrics and for tracking the health of your service.
 
 There are a few sub-projects in this repository and here is a list of those currently available.
