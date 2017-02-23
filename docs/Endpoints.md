@@ -10,7 +10,7 @@ are applied to some of the calls and are labeled in the table below.
 The endpoints described below are built into the container and are always available. Example output is provided
 after the table.
 
-| Description           | Verb  | URL           | Description    | Status | CIDR Rules  |
+| Description           | Verb  | URL           | Description    | HTTP Status | CIDR Rules  |
 | :-------------------- | :---- | :------------ | :------------- | :---------- | :---------- |
 | Ping                  | GET   | /ping         | A simple ping that returns a timestamp  | 200 | No   |
 | Health Check (Full)   | GET   | /health       | This endpoint rolls up all registered health checkers and returns the service's status. The returns full documentation of the status. | 200/503  | Yes  |
@@ -21,13 +21,15 @@ after the table.
 
 ### Ping
 ```
-200 [plain/text]  
+200 [plain/text] 
+
 pong: 2015-01-23T15:11:21.805Z
 ```
 
 ### Health Check (full)
-```json
+```
 200 [application/json]
+
 {
   "host": "my-host",
   "applicationName": "Container Service",
@@ -66,12 +68,14 @@ pong: 2015-01-23T15:11:21.805Z
 ### Health Check (load balancer)
 ```
 200 [plain/text]
+
 UP
 ```
 
 ### Metrics
-```json
+```
 200 [application/json]
+
 {
   "system": {
     "jvm": {
