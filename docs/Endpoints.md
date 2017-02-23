@@ -10,22 +10,24 @@ are applied to some of the calls and are labeled in the table below.
 The endpoints described below are built into the container and are always available. Example output is provided
 after the table.
 
-| Description           | Verb  | URL           | Description    | CIDR Rules  |
-| :-------------------- | :---- | :------------ | :------------- | :---------- |
-| Ping                  | GET   | /ping         | A simple ping that returns a timestamp    | No   |
-| Health Check (Full)   | GET   | /health       | This endpoint rolls up all registered health checkers and returns the service's status. The returns full documentation of the status.   | Yes  |
-| Health Check (LB)     | GET   | /health/lb    | This endpoint performs the health check like the endpoint above, but returned a stripped down response. This is useful to use as a basis for Load Balancer health state calls.  | Yes  |
-| Metrics               | GET   | /metrics      | This endpoint returns the metrics data that has been collected y the service.    | Yes  |
-| Shutdown              | POST  | /shutdown     | This shuts down the service.              | Yes  |
+| Description           | Verb  | URL           | Description    | Status | CIDR Rules  |
+| :-------------------- | :---- | :------------ | :------------- | :---------- | :---------- |
+| Ping                  | GET   | /ping         | A simple ping that returns a timestamp  | 200 | No   |
+| Health Check (Full)   | GET   | /health       | This endpoint rolls up all registered health checkers and returns the service's status. The returns full documentation of the status. | 200/503  | Yes  |
+| Health Check (LB)     | GET   | /health/lb    | This endpoint performs the health check like the endpoint above, but returned a stripped down response. This is useful to use as a basis for Load Balancer health state calls. | 200/503 | Yes  |
+| Metrics               | GET   | /metrics      | This endpoint returns the metrics data that has been collected y the service. | 200  | Yes  |
+| Shutdown              | POST  | /shutdown     | This shuts down the service.       | 200       | Yes  |
 
 
 ### Ping
 ```
-  pong: 2015-01-23T15:11:21.805Z
+200 [plain/text]  
+pong: 2015-01-23T15:11:21.805Z
 ```
 
 ### Health Check (full)
 ```json
+200 [application/json]
 {
   "host": "my-host",
   "applicationName": "Container Service",
@@ -63,11 +65,13 @@ after the table.
 
 ### Health Check (load balancer)
 ```
+200 [plain/text]
 UP
 ```
 
 ### Metrics
 ```json
+200 [application/json]
 {
   "system": {
     "jvm": {
