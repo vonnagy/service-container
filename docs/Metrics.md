@@ -17,7 +17,7 @@ The system provides the following metric types:
 Metrics names should use *dot* notation to differentiate the metrics. An example of a metric for the time to process a request for the endpoint `/metrics` might look like the following: **http.metrics.get**
 
 ## Gathering Metrics
-Gathering metrics within the system is simple. You simple create an intance of a metric an provide an _implicit_ `ActorSystem`.
+Gathering metrics within the system is simple. You simple create an intance of a metric and provide an _implicit_ `ActorSystem`.
 
 ```scala
 val myCounter = Counter("db.product.get")
@@ -38,7 +38,7 @@ myTime.time {
 ```
 
 ## Reporting on Metrics
-Once metrics are gathered they can be reported to other sources. Reporters are defined in the configuration files and follow a standard pattern. They are defined under `container.metrics.reporters` and have there own name sections. The base Service Container library contains a default reported which reports to the log file. It looks like the following in the default configuration.
+Once metrics are gathered they can be reported to other sources. Reporters are defined in the configuration files and follow a standard pattern. They are defined under `container.metrics.reporters` and have there own named sections. The base Service Container library contains a default reported which reports to the log file. It looks like the following in the default configuration.
 
 ```hocon
 container {
