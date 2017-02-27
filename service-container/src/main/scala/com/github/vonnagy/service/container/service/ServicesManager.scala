@@ -87,6 +87,7 @@ class ServicesManager(service: ContainerService,
     initializeServices() onComplete {
       case Success(svcs) =>
         this.services = svcs
+        log.info(s"Initialized ${services.size} services.")
         context.actorOf(HttpService.props(routeEndpoints), "http") ! HttpStart // And then Start the Http server
       case Failure(ex) =>
         //don't start
@@ -111,8 +112,6 @@ class ServicesManager(service: ContainerService,
       unstashAll()
       context.become(running)
       log.info("Http service has started")
-
-      log.info(s"Initialized ${services.size} services.")
 
     case GetHealth =>
       sender ! HealthInfo("services", HealthState.DEGRADED, s"The service is currently being initialized")
