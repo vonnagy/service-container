@@ -21,6 +21,7 @@ case class ContainerBuilder(
                              props: Seq[(String, Props)] = Seq.empty,
                              listeners: Seq[ContainerLifecycleListener] = Seq.empty,
                              config: Config = ConfigFactory.empty,
+                             name: String = "service-container",
                              system: Option[ActorSystem] = None
                            ) {
 
@@ -39,10 +40,12 @@ case class ContainerBuilder(
 
   def withActorSystem(sys: ActorSystem): ContainerBuilder = copy(system = Some(sys))
 
+  def withName(name: String): ContainerBuilder = copy(name = name)
+
   def build: ContainerService = {
-    implicit val actorSystem = system.getOrElse(ActorSystem.create("service-container", config))
+    implicit val actorSystem = system.getOrElse(ActorSystem.create(name, config))
     val svc = new ContainerService(endpoints, healthChecks, props, listeners,
-      Some(config)) with App
+      Some(config), name) with App
     svc
   }
 

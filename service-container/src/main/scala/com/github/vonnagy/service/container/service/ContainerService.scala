@@ -23,19 +23,20 @@ import scala.concurrent.duration._
   * @param props          a lost of actor props to create when starting the container
   * @param config         an optional configuration to use. It will tak precedence over those pass from the command line or
   *                       from the default.
+  * @param name The name of this container service
   */
 class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
                        healthChecks: Seq[HealthCheck] = Nil,
                        props: Seq[Tuple2[String, Props]] = Nil,
                        val listeners: Seq[ContainerLifecycleListener] = Nil,
-                       config: Option[Config] = None) extends CoreConfig with SystemShutdown with LoggingAdapter {
+                       config: Option[Config] = None,
+                       val name: String)(implicit val system: ActorSystem)
+  extends CoreConfig with SystemShutdown with LoggingAdapter {
 
-  // ActorSystem we will use in our application
-  system = Some(ActorSystem.create("server", getConfig(config)))
   var started = false
 
   // Create the root actor that all services will run under
-  lazy val servicesParent = system.get.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
+  lazy val servicesParent = system.actorOf(ServicesManager.props(this, routeEndpoints, props), "service")
 
   /**
     * Start the service which will start the build-in Http service and
@@ -46,13 +47,13 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
     if (!started) {
       started = true
       // Update the health check registry
-      healthChecks.foreach(Health(system.get).addCheck(_))
+      healthChecks.foreach(Health(system).addCheck(_))
 
       // Only block here since we are starting the system
       val td = getConfig(config).get[FiniteDuration]("container.startup.timeout").valueOrElse(5 seconds)
       implicit val timeout = Timeout(td)
       Await.result(servicesParent ? StatusRunning, td)
-      log.info("The container service has been started.")
+      log.info(s"Container $name has been started.")
       listeners.foreach(_.onStartup(this))
       sys.addShutdownHook(listeners.foreach(_.onShutdown(this)))
     }
@@ -82,6 +83,6 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
     *
     * @return a list of ``HealthCheck``
     */
-  def registeredHealthChecks(): Seq[HealthCheck] = if (started) Health(system.get).getChecks else healthChecks
+  def registeredHealthChecks(): Seq[HealthCheck] = if (started) Health(system).getChecks else healthChecks
 
 }

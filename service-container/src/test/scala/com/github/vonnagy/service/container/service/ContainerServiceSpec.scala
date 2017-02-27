@@ -1,11 +1,14 @@
 package com.github.vonnagy.service.container.service
 
-import org.specs2.mutable.Specification
+import akka.actor.{ActorSystem, Terminated}
+import akka.testkit.TestKit
+import org.specs2.concurrent.ExecutionEnv
+import org.specs2.mutable.SpecificationLike
 
-class ContainerServiceSpec extends Specification {
+class ContainerServiceSpec extends TestKit(ActorSystem("service-container")) with SpecificationLike {
 
   sequential
-  val cont = new ContainerService(Nil, Nil, Nil)
+  val cont = new ContainerService(Nil, Nil, Nil, name = "test")
 
   "The ContainerService" should {
 
@@ -17,9 +20,8 @@ class ContainerServiceSpec extends Specification {
 
     "shut down properly when asked" in {
       cont.shutdown
-      cont.system.isEmpty must beTrue
+      implicit val ec = ExecutionEnv.fromExecutionContext(system.dispatcher)
+      cont.system.whenTerminated must beAnInstanceOf[Terminated].await
     }
-
-
   }
 }
