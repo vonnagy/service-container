@@ -25,6 +25,16 @@ class ContainerBuilderSpec extends Specification {
       routes.length must be equalTo 1
     }
 
+    "allow for specifying a name" in {
+
+      val cont = new ContainerBuilder()
+        .withName("Test")
+        .build
+
+      cont.shutdown
+      cont.name must be_==("Test")
+    }
+
     "allow for defining listeners" in {
 
       val cont = new ContainerBuilder()
