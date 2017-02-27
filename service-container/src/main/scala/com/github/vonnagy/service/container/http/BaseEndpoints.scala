@@ -8,13 +8,15 @@ import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.service.ServicesManager.ShutdownService
 import org.joda.time.{DateTime, DateTimeZone}
 
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 class BaseEndpoints(implicit system: ActorSystem,
                     actorRefFactory: ActorRefFactory)
   extends RoutedEndpoints with CIDRDirectives {
 
   lazy val config = system.settings.config.getConfig("container.http")
-  lazy val serviceActor = system.actorSelection("akka://server/user/service")
+  lazy val serviceActor = system.actorSelection("/user/service")
 
   implicit val marshaller = plainMarshaller
   import actorRefFactory.dispatcher
@@ -35,7 +37,10 @@ class BaseEndpoints(implicit system: ActorSystem,
               DateTimeZone.UTC).toString)) andThen {
               case r =>
                 // Send a message to the root actor of this service
-                serviceActor ! ShutdownService(true)
+                serviceActor.resolveOne()(3 seconds).onComplete {
+                  case Success(ref) => ref ! ShutdownService(true)
+                  case Failure(e) => sys.exit()
+                }
             }
           }
         }

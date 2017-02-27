@@ -42,6 +42,7 @@ trait SystemShutdown extends LoggingAdapter {
 
       log.info("Shutting down the actor system")
       system.terminate()
+
       // Wait for termination if it is not already complete
       Await.result(system.whenTerminated, Duration.apply(30, TimeUnit.SECONDS))
       log.info("The actor system has terminated")

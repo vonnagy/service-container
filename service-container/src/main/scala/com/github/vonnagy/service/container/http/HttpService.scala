@@ -24,6 +24,7 @@ case class Unbound()
 case class UnbindFailure(ex: Throwable)
 
 case class HttpStart()
+case class HttpStop()
 case class HttpStarted()
 case class HttpStopped()
 case class HttpFailed()
@@ -92,6 +93,7 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
     * @return
     */
   def running = routeReceive orElse {
+    case HttpStop => stopHttpServer()
     case GetHealth => sender ! getHttpHealth()
   }: Receive
 
@@ -141,11 +143,6 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
           httpServer = Nil
           ctx.parent ! HttpStopped
       }
-    }
-    else {
-      // Send our self an HttpStopped message anyways
-      httpServer = Nil
-      context.parent ! HttpStopped
     }
   }
 

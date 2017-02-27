@@ -144,7 +144,7 @@ class ServicesManager(service: ContainerService,
       context.become(shuttingDown)
 
       context.child("http") match {
-        case Some(http) => context.stop(http)
+        case Some(http) => http ! HttpStop
         // There is no Http child running so send ourself the HttpStopped message
         case None => self ! HttpStopped
       }
@@ -158,11 +158,15 @@ class ServicesManager(service: ContainerService,
     */
   def shuttingDown = {
     case HttpStopped =>
-      service.shutdown()
+      // Make sure the shutdown runs in a different thread to prevent deadlocking
+      implicit val executionContext: ExecutionContext = context.system.dispatcher
+      context.system.scheduler.scheduleOnce(Duration.Zero) {
+        service.shutdown()
 
-      shutDownAndExit match {
-        case Some(true) => sys.exit()
-        case _ =>
+        shutDownAndExit match {
+          case Some(true) => sys.exit()
+          case _ =>
+        }
       }
 
     case StatusRunning => sender.tell(true, self)
