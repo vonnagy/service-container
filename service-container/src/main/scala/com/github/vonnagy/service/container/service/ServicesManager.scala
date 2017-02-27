@@ -9,8 +9,9 @@ import com.github.vonnagy.service.container.http.{HttpStopped, _}
 import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.github.vonnagy.service.container.metrics.reporting.MetricsReportingManager
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 object ServicesManager {
 
@@ -21,13 +22,13 @@ object ServicesManager {
   /**
     * Looks up a service in the currently materialized ServicesManager.
     *
-    * @param name The name of the service.
+    * @param name                The name of the service.
     * @param servicesManagerPath The service manager actor path in the system.
     *
-    * The result is returned as a Future that is completed with the [[ActorRef]]
-    * if such a service exists. It is completed with failure [[ServiceNotFound]] if
-    * no such service(actor) with that name exists
-    * or if there is no service manager in the path specified.
+    *                            The result is returned as a Future that is completed with the [[ActorRef]]
+    *                            if such a service exists. It is completed with failure [[ServiceNotFound]] if
+    *                            no such service(actor) with that name exists
+    *                            or if there is no service manager in the path specified.
     */
   def findService(name: String, servicesManagerPath: String = "server/user/service")
                  (implicit system: ActorSystem): Future[ActorRef] = {
@@ -51,7 +52,7 @@ object ServicesManager {
 
   case class FindService(name: String)
 
-  final case class ServiceNotFound(name:String) extends RuntimeException(s"Service '$name' not found.")
+  final case class ServiceNotFound(name: String) extends RuntimeException(s"Service '$name' not found.")
 
 }
 
@@ -75,16 +76,23 @@ class ServicesManager(service: ContainerService,
   //add the internal services to the ones provided by the user
   private val fprops = props :+ ("metrics_reporting_manager" -> MetricsReportingManager.props())
 
-  private lazy val services: Map[String, ActorRef] = Map(fprops.map { p =>
-    val svc = context.actorOf(p._2, p._1)
-    log.info(s"Started the service ${p._1} at ${svc.path}")
-    p._1 -> svc
-  }: _*)
+  // We make this a var so that we can initialize it from preStart()
+  @volatile
+  private var services: Map[String, ActorRef] = _
 
   override def preStart(): Unit = {
-    // Start the Http server
-    import context.system
-    context.actorOf(HttpService.props(routeEndpoints), "http") ! HttpStart
+    import context.{dispatcher, system}
+
+    //the services have to be started before the HTTP endpoints so that service look ups via FindService are successful.
+    initializeServices() onComplete {
+      case Success(svcs) =>
+        this.services = svcs
+        context.actorOf(HttpService.props(routeEndpoints), "http") ! HttpStart // And then Start the Http server
+      case Failure(ex) =>
+        //don't start
+        throw ex
+    }
+
   }
 
   def receive = initializing
@@ -180,4 +188,13 @@ class ServicesManager(service: ContainerService,
 
   }: Receive
 
+  private def initializeServices()(implicit ec: ExecutionContext): Future[Map[String, ActorRef]] = {
+    Future {
+      Map(fprops.map { p =>
+        val svc = context.actorOf(p._2, p._1)
+        log.info(s"Started the service ${p._1} at ${svc.path}")
+        p._1 -> svc
+      }: _*)
+    }
+  }
 }
