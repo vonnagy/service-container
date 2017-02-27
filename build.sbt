@@ -1,4 +1,4 @@
-val CONTAINER_VERSION = "2.0.3"
+val CONTAINER_VERSION = "2.0.4"
 val SCALA_VERSION = "2.11.8"
 val JDK = "1.8"
 

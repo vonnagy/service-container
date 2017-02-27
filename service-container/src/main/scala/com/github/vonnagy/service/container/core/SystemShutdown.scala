@@ -3,6 +3,7 @@ package com.github.vonnagy.service.container.core
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
+import com.github.vonnagy.service.container.log.LoggingAdapter
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
@@ -13,19 +14,17 @@ import scala.sys.ShutdownHookThread
 /**
   * This trait implements the termination handler to stop the system when the JVM exits.
   */
-trait SystemShutdown {
+trait SystemShutdown extends LoggingAdapter {
 
-  var system: Option[ActorSystem] = None
-  private val shutLog = LoggerFactory.getLogger(this.getClass)
+  def system: ActorSystem
 
   /**
     * Ensure that the constructed ActorSystem is shut down when the JVM shuts down
     */
   var shutdownHook: Option[ShutdownHookThread] = Some(sys.addShutdownHook {
-    if (system.isDefined) {
-      shutLog.info("Shutdown hook called: Shutting down the actor system")
-      shutdownActorSystem(true) {}
-    }
+    log.info("Shutdown hook called: Shutting down the actor system")
+    shutdownActorSystem(true) {}
+
   })
 
   /**
@@ -33,26 +32,23 @@ trait SystemShutdown {
     */
   private[container] def shutdownActorSystem(fromHook: Boolean = false)(f: => Unit): Unit = {
 
-    if (system.isDefined) {
-      try {
-        // Remove the hook
-        if (shutdownHook.isDefined && !fromHook) {
-          shutdownHook.get.remove
+    try {
+      // Remove the hook
+      if (shutdownHook.isDefined && !fromHook) {
+        shutdownHook.get.remove
 
-        }
-        shutdownHook = None
+      }
+      shutdownHook = None
 
-        shutLog.info("Shutting down the actor system")
-        system.get.terminate()
-        // Wait for termination if it is not already complete
-        Await.result(system.get.whenTerminated, Duration.apply(30, TimeUnit.SECONDS))
-        shutLog.info("The actor system has terminated")
-        system = None
-      }
-      catch {
-        case t: Throwable =>
-          shutLog.error(s"The actor system could not be shutdown: ${t.getMessage}", t)
-      }
+      log.info("Shutting down the actor system")
+      system.terminate()
+      // Wait for termination if it is not already complete
+      Await.result(system.whenTerminated, Duration.apply(30, TimeUnit.SECONDS))
+      log.info("The actor system has terminated")
+    }
+    catch {
+      case t: Throwable =>
+        log.error(s"The actor system could not be shutdown: ${t.getMessage}", t)
     }
 
     // Call the passed function

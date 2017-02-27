@@ -1,11 +1,12 @@
 package com.github.vonnagy.service.container.core
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Terminated}
+import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mutable.Specification
 
 /**
- * Created by Ivan von Nagy on 1/19/15.
- */
+  * Created by Ivan von Nagy on 1/19/15.
+  */
 class SystemShutdownSpec extends Specification {
 
   "SystemShutdown" should {
@@ -13,12 +14,15 @@ class SystemShutdownSpec extends Specification {
     "allow the ActorSystem to be shutdown" in {
       val sys = ActorSystem()
       val shut = new SystemShutdown {
-        system = Some(sys)
+        val system = sys
       }
 
       shut.shutdownActorSystem(false) {}
-      shut.system.isEmpty must beTrue
+      implicit val ec = ExecutionEnv.fromExecutionContext(sys.dispatcher)
+      shut.system.whenTerminated must beAnInstanceOf[Terminated].await
+
       sys.whenTerminated.isCompleted must beTrue
+      success
     }
   }
 }

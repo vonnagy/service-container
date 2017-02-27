@@ -93,7 +93,7 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
     }
 
     "be able to send the actor a shutdown message and have it terminate the entire system" in {
-      val cont = new ContainerService(Nil, Nil, Nil)
+      val cont = new ContainerService(Nil, Nil, Nil, name = "test")
       val act = TestActorRef[ServicesManager](ServicesManager.props(cont, Nil, Nil), "service2")
 
       probe.send(act, ShutdownService)
