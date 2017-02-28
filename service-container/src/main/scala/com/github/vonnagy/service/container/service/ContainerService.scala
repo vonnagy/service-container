@@ -21,15 +21,12 @@ import scala.concurrent.duration._
   * @param routeEndpoints a list of route classes to manage
   * @param healthChecks   a list of health checks to register in the system
   * @param props          a lost of actor props to create when starting the container
-  * @param config         an optional configuration to use. It will tak precedence over those pass from the command line or
-  *                       from the default.
   * @param name The name of this container service
   */
 class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
                        healthChecks: Seq[HealthCheck] = Nil,
                        props: Seq[Tuple2[String, Props]] = Nil,
                        val listeners: Seq[ContainerLifecycleListener] = Nil,
-                       config: Option[Config] = None,
                        val name: String)(implicit val system: ActorSystem)
   extends CoreConfig with SystemShutdown with LoggingAdapter {
 
@@ -50,7 +47,7 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
       healthChecks.foreach(Health(system).addCheck(_))
 
       // Only block here since we are starting the system
-      val td = getConfig(config).get[FiniteDuration]("container.startup.timeout").valueOrElse(5 seconds)
+      val td = system.settings.config.get[FiniteDuration]("container.startup.timeout").valueOrElse(5 seconds)
       implicit val timeout = Timeout(td)
       Await.result(servicesParent ? StatusRunning, td)
       log.info(s"Container $name has been started.")

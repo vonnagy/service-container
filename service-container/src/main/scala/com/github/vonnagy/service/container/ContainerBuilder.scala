@@ -1,5 +1,6 @@
 package com.github.vonnagy.service.container
 
+import com.github.vonnagy.service.container.core.CoreConfig
 import com.github.vonnagy.service.container.health.HealthCheck
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
@@ -23,7 +24,7 @@ case class ContainerBuilder(
                              config: Config = ConfigFactory.empty,
                              name: String = "service-container",
                              system: Option[ActorSystem] = None
-                           ) {
+                           ) extends CoreConfig {
 
   def withConfig(conf: Config): ContainerBuilder = copy(config = conf)
 
@@ -43,9 +44,8 @@ case class ContainerBuilder(
   def withName(name: String): ContainerBuilder = copy(name = name)
 
   def build: ContainerService = {
-    implicit val actorSystem = system.getOrElse(ActorSystem.create(name, config))
-    val svc = new ContainerService(endpoints, healthChecks, props, listeners,
-      Some(config), name) with App
+    implicit val actorSystem = system.getOrElse(ActorSystem.create(name, getConfig(Some(config))))
+    val svc = new ContainerService(endpoints, healthChecks, props, listeners, name) with App
     svc
   }
 
