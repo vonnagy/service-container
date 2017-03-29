@@ -2,8 +2,7 @@ package com.github.vonnagy.service.container.http
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorSelection, ActorSystem, Cancellable}
-import akka.util.Timeout
+import akka.actor.{ActorSystem, Cancellable}
 import com.github.vonnagy.service.container.log.LoggingAdapter
 import com.github.vonnagy.service.container.metrics._
 
@@ -68,8 +67,6 @@ private[http] trait HttpMetrics extends LoggingAdapter {
   private def getMetrics(): Unit = {
 
     try {
-      implicit val dis = system.dispatcher
-      implicit val timeout: Timeout = 1.second
       // TODO - No stats
 //      if (httpListener.isDefined) httpListener.get ? Http.GetStats onSuccess {
 //        case x: Stats => lastStats = x

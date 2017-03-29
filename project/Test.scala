@@ -1,8 +1,10 @@
 import sbt.Keys._
 import sbt._
-import scoverage.ScoverageSbtPlugin
+
 
 object Test {
+
+  import scoverage.ScoverageKeys._
 
   // Create a default Scala style task to run with tests
   lazy val testScalastyle = taskKey[Unit]("testScalastyle")
@@ -20,11 +22,10 @@ object Test {
     (test in sbt.Test) := ((test in sbt.Test) dependsOn testScalastyle).value,
 
     // Include the code coverage settings
-    ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := "<empty>;edazdarevic.*",
-    ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 70,
-    ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true,
-
-    ScoverageSbtPlugin.ScoverageKeys.coverageHighlighting := {
+    coverageExcludedPackages := "<empty>;edazdarevic.*",
+    coverageMinimum := 70,
+    coverageFailOnMinimum := true,
+    coverageHighlighting := {
       true
     }
   )

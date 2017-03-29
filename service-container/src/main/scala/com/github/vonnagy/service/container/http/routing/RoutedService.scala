@@ -83,13 +83,6 @@ trait RoutedService extends RoutingHandler with RouteConcatenation {
       for {
         route <- routeEndpoints
       } yield {
-        val ct = route.getConstructors.last
-        val params = ct.getParameterTypes
-
-        val p = params.length match {
-          case 0 => Nil
-          case _ => List(classOf[ActorSystem] -> context.system)
-        }
         val args = List(classOf[ActorSystem] -> context.system, classOf[ActorRefFactory] -> context)
 
         context.system.asInstanceOf[ExtendedActorSystem].dynamicAccess

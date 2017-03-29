@@ -45,7 +45,6 @@ class HealthProviderSpec extends AkkaTestkitSpecs2Support with SpecificationLike
         }
       })
 
-      val c = Health(system).getChecks
       val health = Await.result[ContainerHealth](prov.runChecks, 1 second)
       health.state must be equalTo HealthState.CRITICAL
     }

@@ -1,7 +1,6 @@
 package com.github.vonnagy.service.container.http
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.Http
 import akka.testkit.{TestActorRef, TestProbe}
 import com.github.vonnagy.service.container.{AkkaTestkitSpecs2Support, TestUtils}
 import com.github.vonnagy.service.container.health.HealthState

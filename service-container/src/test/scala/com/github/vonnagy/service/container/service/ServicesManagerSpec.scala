@@ -41,7 +41,7 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
 
     "be able to start an Http service on a specified port" in {
       probe.send(act, StatusRunning)
-      probe.expectMsg(5 seconds, true) must beTrue
+      probe.expectMsg(15 seconds, true) must beTrue
     }
 
     "be able to fetch the system's health" in {
@@ -126,7 +126,6 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
     }
 
     "return a failure when using the wrong service manager path" in {
-      implicit val timeout = Timeout(1 second)
       val act = TestActorRef[ServicesManager](ServicesManager.props(containerService, Nil, Nil), "service5")
       act.underlying.become(act.underlyingActor.running)
       val service = ServicesManager.findService("test_cp", "test/user/service_wrong")

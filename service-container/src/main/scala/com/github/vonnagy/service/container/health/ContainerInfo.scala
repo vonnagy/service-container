@@ -4,7 +4,6 @@ import java.net.InetAddress
 import java.util.jar.Attributes.Name
 import java.util.jar.{Attributes, JarFile, Manifest}
 
-import akka.japi.Option
 import com.github.vonnagy.service.container.log.LoggingAdapter
 
 /**
@@ -59,7 +58,7 @@ object ContainerInfo extends LoggingAdapter {
    * @return
    */
   private[health] def getMainClass: Option[Class[_]] = {
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
 
     def checkStack(elem: StackTraceElement): Option[Class[_]] = try {
       if (elem.getMethodName.equals("main")) Some(Class.forName(elem.getClassName)) else None
@@ -70,7 +69,7 @@ object ContainerInfo extends LoggingAdapter {
       }
     }
 
-    Thread.getAllStackTraces.values.flatMap(currStack => {
+    Thread.getAllStackTraces.asScala.values.flatMap(currStack => {
       if (!currStack.isEmpty)
         checkStack(currStack.last)
       else
