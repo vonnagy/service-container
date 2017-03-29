@@ -81,14 +81,14 @@ class ServicesManager(service: ContainerService,
   private var services: Map[String, ActorRef] = _
 
   override def preStart(): Unit = {
-    import context.{dispatcher, system}
+    import context.dispatcher
 
     //the services have to be started before the HTTP endpoints so that service look ups via FindService are successful.
     initializeServices() onComplete {
       case Success(svcs) =>
         this.services = svcs
         log.info(s"Initialized ${services.size} services.")
-        context.actorOf(HttpService.props(routeEndpoints), "http") ! HttpStart // And then Start the Http server
+        initializeHttpServer
       case Failure(ex) =>
         //don't start
         throw ex
@@ -190,6 +190,11 @@ class ServicesManager(service: ContainerService,
         s"Service is stopped. Currently managing ${context.children.toSeq.length} services", None)
 
   }: Receive
+
+  def initializeHttpServer() = {
+    import context.system
+    context.actorOf(HttpService.props(routeEndpoints), "http") ! HttpStart // And then Start the Http server
+  }
 
   private def initializeServices()(implicit ec: ExecutionContext): Future[Map[String, ActorRef]] = {
     Future {
