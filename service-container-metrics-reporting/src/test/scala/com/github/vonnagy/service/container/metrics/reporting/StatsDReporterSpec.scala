@@ -2,8 +2,6 @@ package com.github.vonnagy.service.container.metrics.reporting
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorSystem
-import akka.testkit.TestKit
 import com.github.jjagged.metrics.reporting.statsd.StatsD
 import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import com.typesafe.config.ConfigFactory

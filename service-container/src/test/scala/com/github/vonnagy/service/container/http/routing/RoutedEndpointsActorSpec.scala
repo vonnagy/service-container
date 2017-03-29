@@ -22,12 +22,12 @@ class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with Specificati
         }
       }, "service")
 
-      val routeSvc = svc.underlyingActor.context
+      svc.underlyingActor.context
         .actorOf(Props(new Act with RoutedService {
           become(routeReceive)
         }), "http")
 
-      val act = TestActorRef(new RoutedEndpointsActor {
+      TestActorRef(new RoutedEndpointsActor {
         def receive = {
           case RouteAdded => probe.ref ! RouteAdded
         }

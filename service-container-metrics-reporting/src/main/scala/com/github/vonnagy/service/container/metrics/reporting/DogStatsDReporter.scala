@@ -9,8 +9,7 @@ import org.coursera.metrics.datadog.DatadogReporter.Expansion
 import org.coursera.metrics.datadog.transport.{Transport, UdpTransport}
 import org.coursera.metrics.datadog.DefaultMetricNameFormatter
 
-import scala.collection.convert.wrapAsScala.asScalaBuffer
-
+import scala.collection.JavaConverters._
 
 class DogStatsDReporter(implicit val system: ActorSystem, val config: Config) extends ScheduledReporter with LoggingAdapter {
 
@@ -23,7 +22,7 @@ class DogStatsDReporter(implicit val system: ActorSystem, val config: Config) ex
   private[reporting] val prefix = config.getString("metric-prefix")
   private[reporting] val apiKey = config.getString("api-key")
 
-  private[reporting] val tags = config.getStringList("tags") ++ Seq(
+  private[reporting] val tags = config.getStringList("tags").asScala ++ Seq(
     s"app:${application.replace(" ", "-").toLowerCase}",
     s"version:$version")
 
@@ -52,15 +51,13 @@ class DogStatsDReporter(implicit val system: ActorSystem, val config: Config) ex
 
   private[reporting] def getReporter(): org.coursera.metrics.datadog.DatadogReporter = {
 
-    import scala.collection.convert.wrapAsJava.seqAsJavaList
-
     log.info("Initializing the DogStatsD metrics reporter")
     org.coursera.metrics.datadog.DatadogReporter.forRegistry(metrics.metricRegistry)
         .withExpansions(Expansion.ALL)
         .withHost(host)
         .withMetricNameFormatter(new DefaultMetricNameFormatter())
         .withPrefix(prefix)
-        .withTags(tags)
+        .withTags(tags.asJava)
         .withTransport(transport)
         .convertRatesTo(TimeUnit.SECONDS)
         .convertDurationsTo(TimeUnit.MILLISECONDS)

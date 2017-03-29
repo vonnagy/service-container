@@ -7,9 +7,9 @@ import akka.actor.{Actor, ActorSystem, Props}
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState, RegisteredHealthCheckActor}
 import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.github.vonnagy.service.container.metrics.Metrics
-import com.typesafe.config.{ConfigRenderOptions, Config}
+import com.typesafe.config.Config
 
-import scala.collection.convert.WrapAsScala
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 
 object MetricsReportingManager {
@@ -52,12 +52,10 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
 
       val definedReporters =
         for {
-          entry <- WrapAsScala.iterableAsScalaIterable(master.root.entrySet)
+          entry <- master.root.entrySet.asScala
           if (master.getConfig(entry.getKey).getBoolean("enabled"))
         } yield {
           val config = master.getConfig(entry.getKey)
-          val json = config.root.render(ConfigRenderOptions.defaults)
-
           val clazz = config.getString("class")
 
           metrics.system.dynamicAccess.createInstanceFor[ScheduledReporter](clazz,

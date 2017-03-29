@@ -134,7 +134,6 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
     }
 
     "return a failure when a service can't be found" in {
-      implicit val timeout = Timeout(1 second)
       val props = Seq("test_service_cp" -> Props[TestService])
       val act = TestActorRef[ServicesManager](ServicesManager.props(containerService, Nil, props), "service6")
       act.underlying.become(act.underlyingActor.running)

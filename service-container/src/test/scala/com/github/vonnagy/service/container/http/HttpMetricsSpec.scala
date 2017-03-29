@@ -9,6 +9,7 @@ import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import com.github.vonnagy.service.container.metrics.Metrics
 import org.specs2.mutable.SpecificationLike
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
 class HttpMetricsSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
@@ -50,9 +51,8 @@ class HttpMetricsSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
       metrics.idle.name must be equalTo "container.http.idle-timeouts"
 
       val metricRegistry = Metrics().metricRegistry
-      import scala.collection.convert.WrapAsScala.mapAsScalaMap
-      metricRegistry.getGauges.foreach(_._2.getValue)
-      metricRegistry.getGauges().filterKeys(g => !g.startsWith("jvm.")).size must be equalTo 8
+      metricRegistry.getGauges.asScala.foreach(_._2.getValue)
+      metricRegistry.getGauges.asScala.filterKeys(g => !g.startsWith("jvm.")).size must be equalTo 8
     }
 
     "schedule and cancel the metrics job" in {
