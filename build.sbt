@@ -1,5 +1,5 @@
-val CONTAINER_VERSION = "2.0.4"
-val SCALA_VERSION = "2.11.8"
+val CONTAINER_VERSION = "2.0.5"
+val SCALA_VERSION = "2.12.1"
 val JDK = "1.8"
 
 val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
@@ -9,9 +9,18 @@ lazy val baseSettings = Seq(
   organization := "com.github.vonnagy",
   version := CONTAINER_VERSION,
   description := "Service Container",
+  crossScalaVersions := Seq("2.11.8", "2.12.1"),
+  scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, scalaMajor)) if scalaMajor >= 11 =>
+        Seq("-Ywarn-unused-import", "-Ywarn-unused")
+      case _ =>
+        Nil
+    }
+  },
   scalaVersion := SCALA_VERSION,
-  packageOptions in (Compile, packageBin) +=
-    Package.ManifestAttributes( "Implementation-Build" -> buildNumber )
+  packageOptions in(Compile, packageBin) +=
+    Package.ManifestAttributes("Implementation-Build" -> buildNumber)
 )
 
 lazy val noPublishSettings = Seq(
@@ -31,13 +40,15 @@ lazy val defaultSettings = baseSettings ++ Seq(
   javacOptions in Compile ++= Seq("-encoding", "UTF-8", "-source", JDK, "-target", JDK,
     "-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options"),
 
-  run in Compile := Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run)),
-  runMain in Compile := Defaults.runMainTask(fullClasspath in Compile, runner in (Compile, run)),
+  run in Compile := Defaults.runTask(fullClasspath in Compile, mainClass in(Compile, run), runner in(Compile, run)),
+  runMain in Compile := Defaults.runMainTask(fullClasspath in Compile, runner in(Compile, run)),
 
   resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
 
   ivyLoggingLevel in ThisBuild := UpdateLogging.Quiet,
-  ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
+  ivyScala := ivyScala.value map {
+    _.copy(overrideScalaVersion = true)
+  },
 
   parallelExecution in ThisBuild := false,
   parallelExecution in Global := false
@@ -54,9 +65,9 @@ lazy val root = (project in file("."))
 lazy val container = (project in file("service-container"))
   .settings(moduleSettings: _*)
   .settings(
-      name := "service-container",
-      dependencyOverrides ++= Dependencies.overrrides,
-      libraryDependencies ++= Dependencies.core
+    name := "service-container",
+    dependencyOverrides ++= Dependencies.overrrides,
+    libraryDependencies ++= Dependencies.core
   )
 
 lazy val metricsReporting = (project in file("service-container-metrics-reporting"))

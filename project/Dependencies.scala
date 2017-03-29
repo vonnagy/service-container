@@ -1,17 +1,17 @@
 import sbt._
 
 object Dependencies {
-  val AKKA_VERSION = "2.4.16"
-  val AKKA_HTTP_VERSION = "10.0.3"
-  val AKKA_SSL_VERSION = "0.2.1"
+  val AKKA_VERSION = "2.4.17"
+  val AKKA_HTTP_VERSION = "10.0.5"
+  val AKKA_SSL_VERSION = "0.2.2"
   val CONFIG_VERSION = "1.3.0"
   val SCALA_CONFIG_VERSION = "0.4.4"
   val JODA_VERSION = "2.9.4"
-  val JSON4S_VERSION = "3.4.1"
+  val JSON4S_VERSION = "3.5.1"
   val LOGBACK_VERSION = "1.1.7"
   val METRICS_VERSION = "3.1.2"
   val SLF4J_VERSION = "1.7.21"
-  val SPECS_VERSION = "3.8.5-20161006092037-b43b121"
+  val SPECS_VERSION = "3.8.9"
 
   object CompileDep {
     val config = "com.typesafe" % "config" % CONFIG_VERSION
@@ -31,7 +31,8 @@ object Dependencies {
     val metricsJvm = "io.dropwizard.metrics" % "metrics-jvm" % METRICS_VERSION
     val joda = "joda-time" % "joda-time" % JODA_VERSION
 
-    val akkaKafka = "com.sclasen" %% "akka-kafka" % "0.1.0"
+    val akkaKafka = "com.typesafe.akka" %% "akka-stream-kafka" % "0.14"
+
     val metricsStatsd = ("com.github.jjagged" % "metrics-statsd" % "1.0.0")
       .excludeAll(ExclusionRule(organization = "com.codahale.metrics"))
 
@@ -43,7 +44,10 @@ object Dependencies {
     val akkaHttpTest = "com.typesafe.akka" %% "akka-http-testkit" % AKKA_HTTP_VERSION % "test"
     val specsCore = "org.specs2" %% "specs2-core" % SPECS_VERSION % "test"
     val specsMock = "org.specs2" %% "specs2-mock" % SPECS_VERSION % "test"
-    val scalazStream = "org.scalaz.stream" %% "scalaz-stream" % "0.7a" % "test"
+    val scalazStream = "org.scalaz.stream" %% "scalaz-stream" % "0.8.6" % "test" cross CrossVersion.binaryMapped {
+      case x if (x startsWith ("2.12")) => "2.12" // useful if a%b was released with the old style
+      case x => x
+    }
   }
 
   import Dependencies.CompileDep._

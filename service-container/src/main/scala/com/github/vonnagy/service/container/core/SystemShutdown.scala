@@ -4,7 +4,6 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import com.github.vonnagy.service.container.log.LoggingAdapter
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

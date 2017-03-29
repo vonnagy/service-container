@@ -13,7 +13,7 @@ addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8.5")
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.7.0")
 
 // Add the scoverage plugin for code coverage
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.1.0")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.0")
 
 // Add coveralls plugin for historical code coverage
 addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0")

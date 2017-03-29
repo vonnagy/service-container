@@ -8,7 +8,6 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.{Route, RoutingLog}
 import akka.http.scaladsl.settings.ServerSettings
 import akka.stream.ActorMaterializer
-import akka.util.Timeout
 import com.github.vonnagy.service.container.health._
 import com.github.vonnagy.service.container.http.routing.{RoutedEndpoints, RoutedService}
 import com.github.vonnagy.service.container.http.security.SSLProvider
@@ -102,7 +101,6 @@ class HttpService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]) extends Acto
     */
   def startHttpServer(): Unit = {
 
-    implicit val timeout = Timeout(2 seconds)
     // Load the routes
     val initialRoutes = routeEndpoints ++
       Seq(classOf[BaseEndpoints], classOf[HealthEndpoints], classOf[MetricsEndpoints])

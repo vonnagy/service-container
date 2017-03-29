@@ -9,7 +9,6 @@ import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
 import com.github.vonnagy.service.container.log.LoggingAdapter
 import com.github.vonnagy.service.container.service.ServicesManager.StatusRunning
-import com.typesafe.config.Config
 import configs.syntax._
 
 import scala.concurrent.Await

@@ -26,8 +26,7 @@ class CoreConfigSpec extends Specification {
 
       val file = Files.write(Files.createTempFile("testconfig", ".conf").toAbsolutePath, "container.http.port=9000".getBytes)
       try {
-        val s = file.toAbsolutePath.toString
-        System.setProperty("config.file", file.toAbsolutePath.toString)
+         System.setProperty("config.file", file.toAbsolutePath.toString)
 
         val config = new CoreConfig {}.getConfig(None)
         config.getInt("container.http.port") must be equalTo 9000

@@ -1,12 +1,11 @@
 package com.github.vonnagy.service.container.metrics
 
 import com.codahale.metrics._
-import org.json4s.{JsonAST, JObject, JValue}
 import org.json4s.JsonDSL._
+import org.json4s.{JObject, JValue, JsonAST}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection._
-import scala.collection.convert.Wrappers.JMapWrapper
 
 class MetricsWriter(registry: MetricRegistry) {
 
@@ -25,7 +24,7 @@ class MetricsWriter(registry: MetricRegistry) {
   private def getVmMetrics: JObject = {
 
     if (registry != null) {
-      val t = SortedMap(registry.getMetrics.filterKeys(n => n.startsWith("jvm.")).to: _*)
+      val t = SortedMap(registry.getMetrics.asScala.filterKeys(n => n.startsWith("jvm.")).to: _*)
 
       if (t.isEmpty) {
         JObject(Nil)
@@ -43,7 +42,7 @@ class MetricsWriter(registry: MetricRegistry) {
             }
         }
 
-        SortedMap(JMapWrapper(m).to: _*).map {
+        SortedMap(m.toSeq: _*).map {
           w =>
             (w._1 ->
               w._2.map {
@@ -62,7 +61,7 @@ class MetricsWriter(registry: MetricRegistry) {
   private def getCustomMetrics(): JObject = {
 
     if (registry != null) {
-      val t = SortedMap(registry.getMetrics.filterKeys(n => !n.startsWith("jvm.")).to: _*)
+      val t = SortedMap(registry.getMetrics.asScala.filterKeys(n => !n.startsWith("jvm.")).to: _*)
 
       if (t.isEmpty) {
         JObject(Nil)
@@ -187,31 +186,24 @@ class MetricsWriter(registry: MetricRegistry) {
     val snapshot = metric.getSnapshot
 
     ("min" -> snapshot.getMin) ~
-    ("max" -> snapshot.getMax) ~
-    ("mean" -> snapshot.getMean) ~
-    ("median" -> snapshot.getMedian) ~
-    ("std_dev" -> snapshot.getStdDev) ~
-    ("p75" -> snapshot.get75thPercentile) ~
-    ("p95" -> snapshot.get95thPercentile) ~
-    ("p98" -> snapshot.get98thPercentile) ~
-    ("p99" -> snapshot.get99thPercentile) ~
-    ("p999" -> snapshot.get999thPercentile)
+      ("max" -> snapshot.getMax) ~
+      ("mean" -> snapshot.getMean) ~
+      ("median" -> snapshot.getMedian) ~
+      ("std_dev" -> snapshot.getStdDev) ~
+      ("p75" -> snapshot.get75thPercentile) ~
+      ("p95" -> snapshot.get95thPercentile) ~
+      ("p98" -> snapshot.get98thPercentile) ~
+      ("p99" -> snapshot.get99thPercentile) ~
+      ("p999" -> snapshot.get999thPercentile)
   }
 
   private def writeMeteredFields(metric: Metered): JObject = {
     ("unit" -> "events/second") ~
-    ("count" -> metric.getCount) ~
-    ("mean" -> metric.getMeanRate) ~
-    ("m1" -> metric.getOneMinuteRate) ~
-    ("m5" -> metric.getFiveMinuteRate) ~
-    ("m15" -> metric.getFifteenMinuteRate)
-  }
-
-  private def checkNan(num: AnyVal): JValue = {
-    num match {
-      case Double.NaN => "Nan"
-      case _ => matchAny(num)
-    }
+      ("count" -> metric.getCount) ~
+      ("mean" -> metric.getMeanRate) ~
+      ("m1" -> metric.getOneMinuteRate) ~
+      ("m5" -> metric.getFiveMinuteRate) ~
+      ("m15" -> metric.getFifteenMinuteRate)
   }
 
   private def matchAny(num: Any): JValue = {
