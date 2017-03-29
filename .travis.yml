@@ -2,7 +2,7 @@ language: scala
 scala:
   - 2.11.8
 before_script: export BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
-script: sbt clean coverage test coverageAggregate
+script: sbt ++$TRAVIS_SCALA_VERSION clean coverage test coverageReport coverageAggregate;
 jdk:
   - oraclejdk8
 notifications:
