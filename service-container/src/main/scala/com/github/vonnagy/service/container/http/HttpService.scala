@@ -33,7 +33,7 @@ case class HttpFailed()
  * endpoints.
  */
 object HttpService {
-  def props(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]])(implicit system: ActorSystem): Props = {
+  def props(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]]): Props = {
     Props(classOf[HttpService], routeEndpoints)
   }
 }

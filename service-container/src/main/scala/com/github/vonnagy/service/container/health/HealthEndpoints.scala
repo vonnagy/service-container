@@ -15,9 +15,8 @@ import scala.util.{Failure, Success, Try}
 /**
   * The REST endpoints for checking the system's health
   */
-class HealthEndpoints(implicit val system: ActorSystem,
-                      actorRefFactory: ActorRefFactory)
-  extends RoutedEndpoints with HealthProvider with CIDRDirectives with DefaultMarshallers {
+class HealthEndpoints(implicit val system: ActorSystem, actorRefFactory: ActorRefFactory)
+  extends RoutedEndpoints()(system, actorRefFactory) with HealthProvider with CIDRDirectives with DefaultMarshallers {
 
   lazy val config = system.settings.config.getConfig("container.http")
   implicit val executor = system.dispatcher

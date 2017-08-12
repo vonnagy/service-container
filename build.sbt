@@ -1,5 +1,5 @@
-val CONTAINER_VERSION = "2.0.5"
-val SCALA_VERSION = "2.12.1"
+val CONTAINER_VERSION = "2.0.6"
+val SCALA_VERSION = "2.12.2"
 val JDK = "1.8"
 
 val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
@@ -9,7 +9,7 @@ lazy val baseSettings = Seq(
   organization := "com.github.vonnagy",
   version := CONTAINER_VERSION,
   description := "Service Container",
-  crossScalaVersions := Seq("2.11.8", "2.12.1"),
+  crossScalaVersions := Seq("2.11.8", "2.12.2"),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
       case Some((2, scalaMajor)) if scalaMajor >= 11 =>

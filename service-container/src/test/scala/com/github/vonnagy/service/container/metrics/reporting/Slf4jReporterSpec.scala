@@ -18,13 +18,11 @@ class Slf4jReporterSpec extends AkkaTestkitSpecs2Support with SpecificationLike 
     "report metrics when triggered by the scheduler" in {
       implicit val config = system.settings.config.getConfig("container.metrics.reporters.Slf4j")
 
-      val rpt = spy(new Slf4jReporter)
+      val slf4jReporter = spy(new Slf4jReporter)
+      slf4jReporter.getReporter returns mock[com.codahale.metrics.Slf4jReporter]
 
-      val rptr = mock[com.codahale.metrics.Slf4jReporter]
-      org.mockito.Mockito.when(rpt.getReporter).thenReturn(rptr)
-
-      rpt.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
-      there was after(30.millis).atLeastOne(rpt).report()
+      slf4jReporter.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
+      there was after(100.millis).atLeastOne(slf4jReporter).report()
     }
   }
 

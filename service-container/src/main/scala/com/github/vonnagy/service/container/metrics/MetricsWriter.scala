@@ -218,7 +218,7 @@ class MetricsWriter(registry: MetricRegistry) {
         case f: Float => float2jvalue(f)
         case d: Double => bigdecimal2jvalue(d)
         case st: String => string2jvalue(st)
-        case r: AnyRef => JsonAST.JNull
+        case AnyRef => JsonAST.JNull
       }
     } catch {
       case e: Throwable =>

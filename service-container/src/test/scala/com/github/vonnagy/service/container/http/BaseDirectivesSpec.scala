@@ -71,8 +71,6 @@ class BaseDirectivesSpec extends Specification with BaseDirectives with DefaultM
 
   "allow for the use of plain response type" in {
 
-    implicit val marsh2 = plainMarshaller
-
     Get() ~> {
       complete("[]")
     } ~> check {

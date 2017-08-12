@@ -8,7 +8,7 @@ import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 
 class MetricsEndpoints(implicit system: ActorSystem,
                        actorRefFactory: ActorRefFactory)
-  extends RoutedEndpoints with CIDRDirectives {
+  extends RoutedEndpoints()(system, actorRefFactory) with CIDRDirectives {
 
   lazy val writer = new MetricsWriter(Metrics(system).metricRegistry)
   lazy val config = system.settings.config.getConfig("container.http")

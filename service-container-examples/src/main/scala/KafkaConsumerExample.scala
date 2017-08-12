@@ -1,5 +1,6 @@
 import akka.actor.{Actor, Props}
-import akka.kafka.ConsumerSettings
+import akka.kafka.scaladsl.Consumer
+import akka.kafka.{ConsumerSettings, Subscriptions}
 import com.github.vonnagy.service.container.ContainerBuilder
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState, RegisteredHealthCheckActor}
 import com.github.vonnagy.service.container.log.ActorLoggingAdapter
@@ -16,6 +17,8 @@ import scala.util.{Failure, Success, Try}
   */
 object KafkaConsumerExample extends App {
 
+  val maxPartitions = 4
+
   // Here we establish the container and build it while
   // applying extras.
   val service = new ContainerBuilder()
@@ -30,10 +33,24 @@ object KafkaConsumerExample extends App {
     */
   class KafkaConsumerManager extends Actor with RegisteredHealthCheckActor with ActorLoggingAdapter {
 
-    lazy val consumerProps = ConsumerSettings.create[String, String](context.system,
+    lazy val consumerSettings = ConsumerSettings.create[String, String](context.system,
       new StringDeserializer, new StringDeserializer)
 
     var consumer: Try[KafkaConsumer[String, String]] = _
+
+    val consumerGroup = Consumer.committablePartitionedSource(consumerSettings, Subscriptions.topics("topic1"))
+
+    //Process each assigned partition separately
+    // TODO
+//    consumerGroup.map {
+//        case (topicPartition, source) =>
+//          source
+//            .via(business)
+//            .toMat(Sink.ignore)(Keep.both)
+//            .run()
+//      }
+//      .mapAsyncUnordered(maxPartitions)(_._2)
+//      .runWith(Sink.ignore)
 
     def receive = {
       // Determine our health
@@ -41,7 +58,7 @@ object KafkaConsumerExample extends App {
     }
 
     override def preStart(): Unit = {
-      consumer = Try(consumerProps.createKafkaConsumer())
+      consumer = Try(consumerSettings.createKafkaConsumer())
     }
 
     override def postStop(): Unit = {
@@ -54,8 +71,10 @@ object KafkaConsumerExample extends App {
       * @return an instance of HealthInfo
       */
     private def determineHealth: HealthInfo = {
+      // TODO
+      val consumerProps = ""
       consumer match {
-        case Success(c) => HealthInfo("kafka-consumer-manager", HealthState.OK,
+        case Success(_) => HealthInfo("kafka-consumer-manager", HealthState.OK,
           s"Currently connected using ${consumerProps}")
 
         case Failure(ex) => HealthInfo("kafka-consumer-manager", HealthState.CRITICAL,

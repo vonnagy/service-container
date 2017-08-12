@@ -1,6 +1,5 @@
 package com.github.vonnagy.service.container.log
 
-import akka.actor.ActorDSL._
 import akka.actor._
 import akka.testkit.{TestActorRef, TestProbe}
 import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
@@ -15,8 +14,8 @@ class LoggingAdapterSpec extends AkkaTestkitSpecs2Support with SpecificationLike
 
     "allow an actor to use the logger" in {
 
-      val act = TestActorRef(new Act with ActorLoggingAdapter {
-        become {
+      val act = TestActorRef(new Actor with ActorLoggingAdapter {
+        def receive = {
           case _ => log.info("got it"); sender ! "got it"
         }
       }, "logger-test")

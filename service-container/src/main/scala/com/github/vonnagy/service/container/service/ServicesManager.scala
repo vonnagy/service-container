@@ -116,7 +116,7 @@ class ServicesManager(service: ContainerService,
     case GetHealth =>
       sender ! HealthInfo("services", HealthState.DEGRADED, s"The service is currently being initialized")
 
-    case m => stash()
+    case _ => stash()
 
   }: Receive
 
@@ -192,7 +192,6 @@ class ServicesManager(service: ContainerService,
   }: Receive
 
   def initializeHttpServer() = {
-    import context.system
     context.actorOf(HttpService.props(routeEndpoints), "http") ! HttpStart // And then Start the Http server
   }
 

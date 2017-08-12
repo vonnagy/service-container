@@ -1,6 +1,5 @@
 package com.github.vonnagy.service.container.http.routing
 
-import akka.actor.ActorDSL._
 import akka.actor._
 import akka.testkit.{TestActorRef, TestProbe}
 import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
@@ -16,15 +15,15 @@ class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with Specificati
     "allow actor to add routes" in {
       val probe = TestProbe()
 
-      val svc = TestActorRef(new Act {
-        become {
+      val svc = TestActorRef(new Actor {
+        def receive = {
           case _ =>
         }
       }, "service")
 
       svc.underlyingActor.context
-        .actorOf(Props(new Act with RoutedService {
-          become(routeReceive)
+        .actorOf(Props(new Actor with RoutedService {
+          def receive = routeReceive
         }), "http")
 
       TestActorRef(new RoutedEndpointsActor {
@@ -46,7 +45,7 @@ class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with Specificati
 }
 
 class TestRoutedEndpoints(implicit val system: ActorSystem,
-                          actorRefFactory: ActorRefFactory) extends RoutedEndpoints {
+                          actorRefFactory: ActorRefFactory) extends RoutedEndpoints()(system, actorRefFactory) {
 
   override def route = {
     path("route") {

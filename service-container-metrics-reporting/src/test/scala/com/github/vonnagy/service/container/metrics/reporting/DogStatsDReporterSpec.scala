@@ -29,20 +29,21 @@ class DogStatsDReporterSpec extends AkkaTestkitSpecs2Support with SpecificationL
         }
         """)
 
-      val rpt = spy(new DogStatsDReporter)
+      val dogStatsDReporter = spy(new DogStatsDReporter)
+
       val transport = mock[Transport]
-      org.mockito.Mockito.when(rpt.getTransport).thenReturn(transport)
+      dogStatsDReporter.getTransport returns transport
 
       val rptr = mock[org.coursera.metrics.datadog.DatadogReporter]
-      org.mockito.Mockito.when(rpt.getReporter).thenReturn(rptr)
+      dogStatsDReporter.getReporter returns rptr
 
-      rpt.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
-      there was after(100.millisecond).atLeastOne(rpt).report()
+      dogStatsDReporter.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
+      there was after(100.millisecond).atLeastOne(dogStatsDReporter).report()
 
-      rpt.tags must containAllOf(Seq("boo", "hoo", "app:container-service", "version:1.0.0.N/A"))
-      rpt.prefix must be equalTo "pref"
+      dogStatsDReporter.tags must containAllOf(Seq("boo", "hoo", "app:container-service", "version:1.0.0.N/A"))
+      dogStatsDReporter.prefix must be equalTo "pref"
 
-      rpt.stop
+      dogStatsDReporter.stop
       there was one(transport).close()
     }
   }

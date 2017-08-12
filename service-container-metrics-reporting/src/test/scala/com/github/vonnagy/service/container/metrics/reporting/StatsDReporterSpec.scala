@@ -30,17 +30,17 @@ class StatsDReporterSpec extends AkkaTestkitSpecs2Support with SpecificationLike
         }
         """)
 
-      val rpt = spy(new StatsDReporter)
+      val statsdReporter = spy(new StatsDReporter)
       val statsD = mock[StatsD]
-      org.mockito.Mockito.when(rpt.getStatsD).thenReturn(statsD)
+      statsdReporter.getStatsD returns statsD
 
       val rptr = mock[com.github.jjagged.metrics.reporting.StatsDReporter]
-      org.mockito.Mockito.when(rpt.getReporter).thenReturn(rptr)
+      statsdReporter.getReporter returns rptr
 
-      rpt.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
-      there was after(30.millisecond).atLeastOne(rpt).report()
+      statsdReporter.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
+      there was after(30.millisecond).atLeastOne(statsdReporter).report()
 
-      rpt.stop
+      statsdReporter.stop
       there was one(statsD).close()
     }
   }
