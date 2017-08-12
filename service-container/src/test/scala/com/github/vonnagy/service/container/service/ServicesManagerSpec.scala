@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorNotFound, ActorRef, ActorSystem, Props, Terminate
 import akka.testkit.{TestActorRef, TestProbe}
 import akka.util.Timeout
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState}
-import com.github.vonnagy.service.container.http.{HttpStarted, HttpStopped}
+import com.github.vonnagy.service.container.http.HttpStopped
 import com.github.vonnagy.service.container.service.ServicesManager.{FindService, ServiceNotFound, ShutdownService, StatusRunning}
 import com.github.vonnagy.service.container.{AkkaTestkitSpecs2Support, TestUtils}
 import com.typesafe.config.ConfigFactory
