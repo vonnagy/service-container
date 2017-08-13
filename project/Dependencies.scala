@@ -25,6 +25,7 @@ object Dependencies {
     val akkaHttpExp = "com.typesafe.akka" %% "akka-http" % AKKA_HTTP_VERSION
     val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % AKKA_VERSION
     val akkaRemote = "com.typesafe.akka" %% "akka-remote" % AKKA_VERSION
+    val akkaStream = "com.typesafe.akka" %% "akka-stream" % AKKA_VERSION
     val akkaSSL = "com.typesafe" %% "ssl-config-akka" % AKKA_SSL_VERSION
     val slf4j = "org.slf4j" % "slf4j-api" % SLF4J_VERSION
     val logback = "ch.qos.logback" % "logback-classic" % LOGBACK_VERSION
@@ -38,7 +39,7 @@ object Dependencies {
     val akkaKafka = "com.typesafe.akka" %% "akka-stream-kafka" % AKKA_STREAM_KAFKA
 
     val metricsStatsd = ("com.github.jjagged" % "metrics-statsd" % METRICS_STATSD)
-      .excludeAll(ExclusionRule(organization = "com.codahale.metrics"))
+      .excludeAll(ExclusionRule(organization = "com.codahale.metrics", artifact = "metrics-core" ))
 
     val metricsDataDog = "org.coursera" % "metrics-datadog" % METRICS_DATADOG
   }
@@ -46,6 +47,7 @@ object Dependencies {
   object TestDep {
     val akkaTest = "com.typesafe.akka" %% "akka-testkit" % AKKA_VERSION % "test"
     val akkaHttpTest = "com.typesafe.akka" %% "akka-http-testkit" % AKKA_HTTP_VERSION % "test"
+    val akkaStreamTest = "com.typesafe.akka" %% "akka-stream-testkit" % AKKA_VERSION % "test"
     val specsCore = "org.specs2" %% "specs2-core" % SPECS_VERSION % "test"
     val specsMock = "org.specs2" %% "specs2-mock" % SPECS_VERSION % "test"
     val scalazStream = "org.scalaz.stream" %% "scalaz-stream" % SCALAZ_STREAM % "test" cross CrossVersion.binaryMapped {
@@ -57,17 +59,17 @@ object Dependencies {
   import Dependencies.CompileDep._
   import Dependencies.TestDep._
 
-  val akka = Seq(akkaActor, akkaHttp, akkaHttpExp, akkaRemote, akkaSlf4j, akkaSSL)
+  val akka = Seq(akkaActor, akkaHttp, akkaHttpExp, akkaRemote, akkaSlf4j, akkaSSL, akkaStream)
   val json = Seq(json4sJackson, json4sExt)
   val logging = Seq(logback, slf4j, slf4jOverLog4j)
   val metrics = Seq(metricsCore, metricsJvm)
 
   val base = akka ++ json ++ logging ++ metrics ++ Seq(joda, scalaConfig)
-  val test = Seq(akkaTest, akkaHttpTest, specsCore, specsMock, scalazStream)
+  val test = Seq(akkaTest, akkaHttpTest, akkaStreamTest, specsCore, specsMock, scalazStream)
 
   val core = base ++ test
   val reporting = test ++ Seq(metricsStatsd, metricsDataDog)
   val examples = Seq(akkaKafka)
 
-  val overrrides = Set(joda, metricsCore, slf4j)
+  val overrrides = Set(joda, metricsCore, slf4j) ++ akka
 }
