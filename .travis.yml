@@ -1,7 +1,7 @@
 language: scala
 scala:
   - 2.11.8
-  - 2.12.1
+  - 2.12.2
 before_script: export BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
 script: sbt ++$TRAVIS_SCALA_VERSION clean coverage test coverageReport coverageAggregate;
 jdk:

@@ -1,6 +1,5 @@
 package com.github.vonnagy.service.container.http.routing
 
-import akka.actor.ActorDSL._
 import akka.actor._
 import akka.http.scaladsl.model.{HttpEntity, MediaTypes, StatusCodes}
 import akka.http.scaladsl.server.{Directives, Route}
@@ -11,10 +10,13 @@ import org.specs2.mutable.Specification
 
 class RoutedServiceSpec extends Specification with Directives with Specs2RouteTest {
 
+  case class TestEntity(id: Int, name: String)
+
   val probe = new TestProbe(system)
-  val httpAct = TestActorRef(Props(new Act with RoutedService with DefaultMarshallers {
-    become(routeReceive)
+  val httpAct = TestActorRef(Props(new Actor with RoutedService with DefaultMarshallers {
+    def receive = routeReceive
   }), "http")
+
   val svc = httpAct.underlyingActor.asInstanceOf[RoutedService]
 
   def echoComplete[T]: T => Route = { x ⇒ complete(x.toString) }
@@ -41,14 +43,13 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
 
     "respond with UnprocessableEntity for requests resulting in a MalformedFormFieldRejection" in {
 
-      case class TestEntity(id: Int, name: String)
       implicit val unmarsh = svc.jsonUnmarshaller[TestEntity]
       implicit val rejMarsh = svc.jsonUnmarshaller[RejectionResponse]
 
       val postRoute = new RoutedEndpoints {
         def route = {
           post {
-            path("test3") {
+            path("test4") {
               entity(as[TestEntity]) {
                 echoComplete
               }
@@ -60,7 +61,10 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
       probe.send(httpAct, AddRoute(postRoute))
       probe.expectMsg(RouteAdded)
 
-      Post("/test3", HttpEntity(MediaTypes.`application/json`, """{"id":100, "namex":"product"}""")) ~>
+      import svc.defaultJsonFormats
+      val ent = TestEntity(100, "product")
+
+      Post("/test4", HttpEntity(MediaTypes.`application/json`, svc.serialization.write(ent))) ~>
         handleRejections(svc.rejectionHandler)(svc.buildRoute(svc.routes)) ~> check {
         status === StatusCodes.UnprocessableEntity
         mediaType === MediaTypes.`application/json`
@@ -75,7 +79,7 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
       val postRoute = new RoutedEndpoints {
         def route = {
           get {
-            path("test4") { ctx => throw new Exception("test") }
+            path("test5") { ctx => throw new Exception("test") }
           }
         }
       }
@@ -83,7 +87,7 @@ class RoutedServiceSpec extends Specification with Directives with Specs2RouteTe
       probe.send(httpAct, AddRoute(postRoute))
       probe.expectMsg(RouteAdded)
 
-      Get("/test4") ~>
+      Get("/test5") ~>
         Route.seal(svc.buildRoute(svc.routes))(svc.routeSettings,
           exceptionHandler = svc.exceptionHandler,
           rejectionHandler = svc.rejectionHandler) ~> check {

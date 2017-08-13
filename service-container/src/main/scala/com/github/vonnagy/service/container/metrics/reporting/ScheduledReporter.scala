@@ -7,10 +7,19 @@ import com.typesafe.config.Config
 
 import scala.concurrent.duration.FiniteDuration
 
+class A()(implicit val system: ActorSystem, val config: Config) extends ScheduledReporter {
+  def report() = {}
+}
+
+class B()(implicit val system: ActorSystem, val config: Config) extends ScheduledReporter {
+  def report() = {}
+}
+
 abstract class ScheduledReporter {
 
   implicit val system: ActorSystem
   implicit val config: Config
+
   val metrics = Metrics(system)
   val host = ContainerInfo.host
   val application = ContainerInfo.application

@@ -35,11 +35,11 @@ class BaseEndpoints(implicit system: ActorSystem,
 
             ctx.complete("The system is being shutdown: ".concat(new DateTime(System.currentTimeMillis(),
               DateTimeZone.UTC).toString)) andThen {
-              case r =>
+              case _ =>
                 // Send a message to the root actor of this service
                 serviceActor.resolveOne()(3 seconds).onComplete {
                   case Success(ref) => ref ! ShutdownService(true)
-                  case Failure(e) => sys.exit()
+                  case Failure(_) => sys.exit()
                 }
             }
           }

@@ -122,16 +122,11 @@ case class Timer(val name: String)(implicit val system: ActorSystem) extends Met
   private val delegate = metricRegistry.timer(name)
 
   /**
-   * Time the function
-   */
-  def time[A](f: => A): A = time(this)(f)
-
-  /**
    * Time the application of this function
-   * @param   f function that is timed
+   * @param  f function that is timed
    * @tparam A
    */
-  def time[A](metric: Timer)(f: => A): A = {
+  def time[A](f: => A): A = {
     val ctx = delegate.time()
     try {
       f

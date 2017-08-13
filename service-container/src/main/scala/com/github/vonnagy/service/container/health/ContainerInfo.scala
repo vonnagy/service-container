@@ -31,7 +31,7 @@ object ContainerInfo extends LoggingAdapter {
       InetAddress.getLocalHost.getHostName.split("\\.")(0)
     }
     catch {
-      case ex: Exception => {
+      case _: Exception => {
         "Unknown"
       }
     }
@@ -63,7 +63,7 @@ object ContainerInfo extends LoggingAdapter {
     def checkStack(elem: StackTraceElement): Option[Class[_]] = try {
       if (elem.getMethodName.equals("main")) Some(Class.forName(elem.getClassName)) else None
     } catch {
-      case e: ClassNotFoundException => {
+      case _: ClassNotFoundException => {
         // Swallow the exception
         None
       }
@@ -82,7 +82,7 @@ object ContainerInfo extends LoggingAdapter {
               Some(Class.forName(command))
             } catch {
               // Swallow the exception
-              case e: ClassNotFoundException =>
+              case _: ClassNotFoundException =>
                 None
             }
 
@@ -109,7 +109,7 @@ object ContainerInfo extends LoggingAdapter {
       }
     }
     catch {
-      case e: Exception => {
+      case _: Exception => {
         val manifest: Manifest = new Manifest
         manifest.getMainAttributes.put(Name.IMPLEMENTATION_TITLE, "Container Service")
         manifest.getMainAttributes.put(Name.IMPLEMENTATION_VERSION, "1.0.0")

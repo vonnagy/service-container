@@ -6,7 +6,7 @@ import com.github.vonnagy.service.container.http.routing._
 
 class TestEndpoints(implicit system: ActorSystem,
                     actorRefFactory: ActorRefFactory)
-  extends RoutedEndpoints {
+  extends RoutedEndpoints()(system, actorRefFactory) {
 
   val route = {
     path("test") {

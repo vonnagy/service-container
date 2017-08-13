@@ -2,8 +2,7 @@ package com.github.vonnagy.service.container.http
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorDSL._
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.TestActorRef
 import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
 import com.github.vonnagy.service.container.metrics.Metrics
@@ -16,14 +15,14 @@ class HttpMetricsSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
 
   sequential
 
-  val svcAct = TestActorRef(new Act {
-    become {
+  val svcAct = TestActorRef(new Actor {
+    def receive = {
       case _ =>
     }
 
     val listener = context.actorOf(Props(
-      new Act {
-        become {
+      new Actor {
+        def receive = {
           case _ => sender ! Stats(FiniteDuration(1000, TimeUnit.MILLISECONDS), 1000, 1000, 1000, 1000, 1000, 1000, 1000)
         }
 

@@ -1,6 +1,5 @@
 package com.github.vonnagy.service.container.health
 
-import akka.actor.ActorDSL._
 import akka.actor._
 import akka.testkit.TestActorRef
 import com.github.vonnagy.service.container.AkkaTestkitSpecs2Support
@@ -25,8 +24,8 @@ class RegisteredHealthCheckActorSpec extends AkkaTestkitSpecs2Support with Speci
     "allow for the creation of a registered health check actor" in {
 
       val ext = Health(system)
-      val act = TestActorRef(new Act with RegisteredHealthCheckActor {
-        become {
+      val act = TestActorRef(new Actor with RegisteredHealthCheckActor {
+        def receive = {
           case GetHealth => sender ! HealthInfo("test", HealthState.OK, "details")
         }
       })

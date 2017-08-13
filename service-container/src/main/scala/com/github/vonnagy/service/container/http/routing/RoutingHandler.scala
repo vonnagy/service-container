@@ -44,7 +44,7 @@ trait RoutingHandler extends Directives with DefaultMarshallers with LoggingAdap
     val orig = RejectionHandler.newBuilder()
       .handle { case NotFoundRejection(errorMsg) => complete(NotFound, errorMsg) }
       .handle { case DuplicateRejection(errorMsg) => complete(BadRequest, errorMsg) }
-      .handle { case MalformedRequestContentRejection(errorMsg, cause) => complete(UnprocessableEntity, errorMsg) }
+      .handle { case MalformedRequestContentRejection(errorMsg, _) => complete(UnprocessableEntity, errorMsg) }
       .handleNotFound { complete((NotFound, "The requested resource could not be found.")) }
       .result
       .seal
@@ -69,7 +69,7 @@ trait RoutingHandler extends Directives with DefaultMarshallers with LoggingAdap
         response.withEntity(HttpEntity(ContentType(MediaTypes.`application/json`),
           Serialization.write(rej)))
 
-      case other =>
+      case _ =>
         throw new Exception("Unexpected entity type")
     }
   }

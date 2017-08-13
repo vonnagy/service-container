@@ -1,16 +1,20 @@
 import sbt._
 
 object Dependencies {
-  val AKKA_VERSION = "2.4.17"
-  val AKKA_HTTP_VERSION = "10.0.5"
+  val AKKA_VERSION = "2.5.4"
+  val AKKA_HTTP_VERSION = "10.0.9"
   val AKKA_SSL_VERSION = "0.2.2"
-  val CONFIG_VERSION = "1.3.0"
+  val AKKA_STREAM_KAFKA = "0.16"
+  val CONFIG_VERSION = "1.3.1"
   val SCALA_CONFIG_VERSION = "0.4.4"
-  val JODA_VERSION = "2.9.4"
-  val JSON4S_VERSION = "3.5.1"
-  val LOGBACK_VERSION = "1.1.7"
-  val METRICS_VERSION = "3.1.2"
-  val SLF4J_VERSION = "1.7.21"
+  val JODA_VERSION = "2.9.9"
+  val JSON4S_VERSION = "3.5.3"
+  val LOGBACK_VERSION = "1.2.3"
+  val METRICS_DATADOG = "1.1.13"
+  val METRICS_STATSD = "1.0.0"
+  val METRICS_VERSION = "3.2.4"
+  val SCALAZ_STREAM = "0.8.6"
+  val SLF4J_VERSION = "1.7.25"
   val SPECS_VERSION = "3.8.9"
 
   object CompileDep {
@@ -31,12 +35,12 @@ object Dependencies {
     val metricsJvm = "io.dropwizard.metrics" % "metrics-jvm" % METRICS_VERSION
     val joda = "joda-time" % "joda-time" % JODA_VERSION
 
-    val akkaKafka = "com.typesafe.akka" %% "akka-stream-kafka" % "0.14"
+    val akkaKafka = "com.typesafe.akka" %% "akka-stream-kafka" % AKKA_STREAM_KAFKA
 
-    val metricsStatsd = ("com.github.jjagged" % "metrics-statsd" % "1.0.0")
+    val metricsStatsd = ("com.github.jjagged" % "metrics-statsd" % METRICS_STATSD)
       .excludeAll(ExclusionRule(organization = "com.codahale.metrics"))
 
-    val metricsDataDog = "org.coursera" % "metrics-datadog" % "1.1.3"
+    val metricsDataDog = "org.coursera" % "metrics-datadog" % METRICS_DATADOG
   }
 
   object TestDep {
@@ -44,7 +48,7 @@ object Dependencies {
     val akkaHttpTest = "com.typesafe.akka" %% "akka-http-testkit" % AKKA_HTTP_VERSION % "test"
     val specsCore = "org.specs2" %% "specs2-core" % SPECS_VERSION % "test"
     val specsMock = "org.specs2" %% "specs2-mock" % SPECS_VERSION % "test"
-    val scalazStream = "org.scalaz.stream" %% "scalaz-stream" % "0.8.6" % "test" cross CrossVersion.binaryMapped {
+    val scalazStream = "org.scalaz.stream" %% "scalaz-stream" % SCALAZ_STREAM % "test" cross CrossVersion.binaryMapped {
       case x if (x startsWith ("2.12")) => "2.12" // useful if a%b was released with the old style
       case x => x
     }
