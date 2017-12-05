@@ -1,6 +1,6 @@
 package com.github.vonnagy.service.container.http
 
-import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
 import akka.japi.Util._
 import com.github.vonnagy.service.container.http.directives.CIDRDirectives
@@ -8,18 +8,17 @@ import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.service.ServicesManager.ShutdownService
 import org.joda.time.{DateTime, DateTimeZone}
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-class BaseEndpoints(implicit system: ActorSystem,
-                    actorRefFactory: ActorRefFactory)
+class BaseEndpoints(implicit system: ActorSystem, executionContext: ExecutionContext)
   extends RoutedEndpoints with CIDRDirectives {
 
   lazy val config = system.settings.config.getConfig("container.http")
   lazy val serviceActor = system.actorSelection("/user/service")
 
   implicit val marshaller = plainMarshaller
-  import actorRefFactory.dispatcher
 
   val route = {
     path("favicon.ico") {

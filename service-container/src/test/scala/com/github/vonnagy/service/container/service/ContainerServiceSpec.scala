@@ -3,7 +3,6 @@ package com.github.vonnagy.service.container.service
 import akka.actor.{ActorSystem, Terminated}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, StatusCodes}
-import akka.stream.ActorMaterializer
 import com.github.vonnagy.service.container.{AkkaTestkitSpecs2Support, TestUtils}
 import com.typesafe.config.ConfigFactory
 import org.specs2.concurrent.ExecutionEnv
@@ -36,8 +35,6 @@ class ContainerServiceSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", 
 
       val host = system.settings.config.getString("container.http.interface")
       val port = system.settings.config.getInt("container.http.port")
-
-      implicit val materializer = ActorMaterializer()
 
       val resp = Http().singleRequest(HttpRequest(uri = s"http://$host:$port/ping"))
       resp.value.get.get.status must eventually(be_==(StatusCodes.OK))

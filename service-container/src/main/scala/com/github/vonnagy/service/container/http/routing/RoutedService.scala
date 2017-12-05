@@ -2,7 +2,9 @@ package com.github.vonnagy.service.container.http.routing
 
 import akka.ConfigurationException
 import akka.actor._
-import akka.http.scaladsl.server.{RouteConcatenation, Route}
+import akka.http.scaladsl.server.{Route, RouteConcatenation}
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Add a set of defined routes
@@ -83,7 +85,7 @@ trait RoutedService extends RoutingHandler with RouteConcatenation {
       for {
         route <- routeEndpoints
       } yield {
-        val args = List(classOf[ActorSystem] -> context.system, classOf[ActorRefFactory] -> context)
+        val args = List(classOf[ActorSystem] -> context.system, classOf[ExecutionContext] -> context.dispatcher)
 
         context.system.asInstanceOf[ExtendedActorSystem].dynamicAccess
           .createInstanceFor[RoutedEndpoints](route.getName, args).map({

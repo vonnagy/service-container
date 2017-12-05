@@ -1,5 +1,7 @@
 package com.github.vonnagy.service.container.service
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -9,10 +11,9 @@ import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import com.github.vonnagy.service.container.listener.ContainerLifecycleListener
 import com.github.vonnagy.service.container.log.LoggingAdapter
 import com.github.vonnagy.service.container.service.ServicesManager.StatusRunning
-import configs.syntax._
 
 import scala.concurrent.Await
-import scala.concurrent.duration._
+import scala.concurrent.duration.Duration
 
 /**
   * This is the main class for the container. It takes several parameters to be used in its construction.
@@ -46,8 +47,8 @@ class ContainerService(routeEndpoints: Seq[Class[_ <: RoutedEndpoints]] = Nil,
       healthChecks.foreach(Health(system).addCheck(_))
 
       // Only block here since we are starting the system
-      val td = system.settings.config.get[FiniteDuration]("container.startup.timeout").valueOrElse(5 seconds)
-      implicit val timeout = Timeout(td)
+      val td = Duration(system.settings.config.getDuration("container.startup.timeout").toMillis, TimeUnit.MILLISECONDS)
+      implicit val timeout = Timeout(td.toMillis, TimeUnit.MILLISECONDS)
       Await.result(servicesParent ? StatusRunning, td)
       log.info(s"Container $name has been started.")
       listeners.foreach(_.onStartup(this))

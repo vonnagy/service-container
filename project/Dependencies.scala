@@ -1,21 +1,21 @@
 import sbt._
 
 object Dependencies {
-  val AKKA_VERSION = "2.5.4"
-  val AKKA_HTTP_VERSION = "10.0.9"
+  val AKKA_VERSION = "2.5.7"
+  val AKKA_HTTP_VERSION = "10.0.11"
   val AKKA_SSL_VERSION = "0.2.2"
-  val AKKA_STREAM_KAFKA = "0.16"
-  val CONFIG_VERSION = "1.3.1"
+  val AKKA_STREAM_KAFKA = "0.18"
+  val CONFIG_VERSION = "1.3.2"
   val SCALA_CONFIG_VERSION = "0.4.4"
   val JODA_VERSION = "2.9.9"
   val JSON4S_VERSION = "3.5.3"
   val LOGBACK_VERSION = "1.2.3"
   val METRICS_DATADOG = "1.1.13"
   val METRICS_STATSD = "1.0.0"
-  val METRICS_VERSION = "3.2.4"
+  val METRICS_VERSION = "3.2.5"
   val SCALAZ_STREAM = "0.8.6"
   val SLF4J_VERSION = "1.7.25"
-  val SPECS_VERSION = "3.8.9"
+  val SPECS_VERSION = "4.0.1"
 
   object CompileDep {
     val config = "com.typesafe" % "config" % CONFIG_VERSION

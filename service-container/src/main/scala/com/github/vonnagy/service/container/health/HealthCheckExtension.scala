@@ -5,7 +5,7 @@ import org.json4s.DefaultFormats
 
 import scala.collection.mutable
 
-class HealthCheckExtension(system: ExtendedActorSystem) extends Extension {
+class HealthCheckExtension extends Extension {
 
 
   implicit val formats = DefaultFormats
@@ -39,7 +39,7 @@ with ExtensionIdProvider {
 
   //This method will be called by Akka
   // to instantiate our Extension
-  override def createExtension(system: ExtendedActorSystem) = new HealthCheckExtension(system)
+  override def createExtension(system: ExtendedActorSystem) = new HealthCheckExtension
 
   def apply()(implicit system: ActorSystem): HealthCheckExtension = system.registerExtension(this)
 }
