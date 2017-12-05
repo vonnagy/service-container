@@ -38,7 +38,7 @@ class StatsDReporterSpec extends AkkaTestkitSpecs2Support with SpecificationLike
       statsdReporter.getReporter returns rptr
 
       statsdReporter.start(FiniteDuration(2, TimeUnit.MILLISECONDS))
-      there was after(30.millisecond).atLeastOne(statsdReporter).report()
+      there was after(100.millisecond).atLeastOne(statsdReporter).report()
 
       statsdReporter.stop
       there was one(statsD).close()
