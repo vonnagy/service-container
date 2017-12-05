@@ -1,12 +1,14 @@
 package com.github.vonnagy.service.container
 
-import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.actor.ActorSystem
 import com.github.vonnagy.service.container.http.routing._
+
+import scala.concurrent.ExecutionContext
 
 
 class TestEndpoints(implicit system: ActorSystem,
-                    actorRefFactory: ActorRefFactory)
-  extends RoutedEndpoints()(system, actorRefFactory) {
+                    executor: ExecutionContext)
+  extends RoutedEndpoints()(system, executor) {
 
   val route = {
     path("test") {

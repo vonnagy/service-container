@@ -1,9 +1,11 @@
-import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.model.MediaTypes
 import com.github.vonnagy.service.container.ContainerBuilder
 import com.github.vonnagy.service.container.http.routing._
 import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.ExecutionContext
 
 
 object RestHttpSample extends App {
@@ -32,7 +34,7 @@ object RestHttpSample extends App {
   case class Product(id: Option[Int], name: String)
 
   class ProductEndpoints(implicit system: ActorSystem,
-                         actorRefFactory: ActorRefFactory) extends RoutedEndpoints {
+                         executor: ExecutionContext) extends RoutedEndpoints {
 
     // Import the default Json marshaller and un-marshaller
     implicit val marshaller: ToEntityMarshaller[AnyRef] = jsonMarshaller

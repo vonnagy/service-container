@@ -10,7 +10,7 @@ import org.specs2.mutable.Specification
 
 class MetricsEndpointsSpec extends Specification with Specs2RouteTest {
 
-  val endpoints = new MetricsEndpoints()(system, system)
+  val endpoints = new MetricsEndpoints()(system, system.dispatcher)
 
   def remoteAddress(ip: String) = RemoteAddress(InetAddress.getByName(ip))
 

@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-class BaseEndpoints(implicit system: ActorSystem, executionContext: ExecutionContext)
+class BaseEndpoints(implicit system: ActorSystem, executor: ExecutionContext)
   extends RoutedEndpoints with CIDRDirectives {
 
   lazy val config = system.settings.config.getConfig("container.http")

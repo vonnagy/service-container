@@ -1,6 +1,6 @@
 package com.github.vonnagy.service.container.health
 
-import akka.actor.{ActorRefFactory, ActorSystem}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.model.{MediaTypes, StatusCodes}
 import akka.http.scaladsl.server._
@@ -10,16 +10,16 @@ import com.github.vonnagy.service.container.http.directives.CIDRDirectives
 import com.github.vonnagy.service.container.http.routing.RoutedEndpoints
 import org.joda.time.DateTime
 
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 /**
   * The REST endpoints for checking the system's health
   */
-class HealthEndpoints(implicit val system: ActorSystem, actorRefFactory: ActorRefFactory)
-  extends RoutedEndpoints()(system, actorRefFactory) with HealthProvider with CIDRDirectives with DefaultMarshallers {
+class HealthEndpoints(implicit val system: ActorSystem, val executor: ExecutionContext)
+  extends RoutedEndpoints()(system, executor) with HealthProvider with CIDRDirectives with DefaultMarshallers {
 
   lazy val config = system.settings.config.getConfig("container.http")
-  implicit val executor = system.dispatcher
 
   val route = {
     pathPrefix("health") {

@@ -10,6 +10,8 @@ import org.specs2.mutable.SpecificationLike
   */
 class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with SpecificationLike {
 
+  import system.dispatcher
+
   "The RoutedEndpointsActor" should {
 
     "allow actor to add routes" in {
@@ -40,16 +42,6 @@ class RoutedEndpointsActorSpec extends AkkaTestkitSpecs2Support with Specificati
 
       probe.expectMsg(RouteAdded) must beEqualTo(RouteAdded)
 
-    }
-  }
-}
-
-class TestRoutedEndpoints(implicit val system: ActorSystem,
-                          actorRefFactory: ActorRefFactory) extends RoutedEndpoints()(system, actorRefFactory) {
-
-  override def route = {
-    path("route") {
-      complete("route")
     }
   }
 }

@@ -14,7 +14,7 @@ class HealthEndpointsSpec extends Specification with Specs2RouteTest {
 
   sequential
 
-  val endpoints = new HealthEndpoints()(system, system)
+  val endpoints = new HealthEndpoints()(system, system.dispatcher)
   def remoteAddress(ip: String) = RemoteAddress(InetAddress.getByName(ip))
 
   "The routing infrastructure" should {

@@ -159,7 +159,7 @@ class ServicesManager(service: ContainerService,
   def shuttingDown = {
     case HttpStopped =>
       // Make sure the shutdown runs in a different thread to prevent deadlocking
-      implicit val executionContext: ExecutionContext = context.system.dispatcher
+      implicit val executor: ExecutionContext = context.system.dispatcher
       context.system.scheduler.scheduleOnce(Duration.Zero) {
         service.shutdown()
 
