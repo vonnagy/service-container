@@ -1,8 +1,8 @@
 import sbt._
 
 object Dependencies {
-  val AKKA_VERSION = "2.4.17"
-  val AKKA_HTTP_VERSION = "10.0.5"
+  val AKKA_VERSION = "2.5.8"
+  val AKKA_HTTP_VERSION = "10.0.11"
   val AKKA_SSL_VERSION = "0.2.2"
   val CONFIG_VERSION = "1.3.0"
   val SCALA_CONFIG_VERSION = "0.4.4"
