@@ -26,7 +26,6 @@ object Dependencies {
     val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % AKKA_VERSION
     val akkaRemote = "com.typesafe.akka" %% "akka-remote" % AKKA_VERSION
     val akkaStream = "com.typesafe.akka" %% "akka-stream" % AKKA_VERSION
-    val akkaSSL = "com.typesafe" %% "ssl-config-akka" % AKKA_SSL_VERSION
     val slf4j = "org.slf4j" % "slf4j-api" % SLF4J_VERSION
     val logback = "ch.qos.logback" % "logback-classic" % LOGBACK_VERSION
     val slf4jOverLog4j = "org.slf4j" % "log4j-over-slf4j" % SLF4J_VERSION
@@ -39,7 +38,7 @@ object Dependencies {
     val akkaKafka = "com.typesafe.akka" %% "akka-stream-kafka" % AKKA_STREAM_KAFKA
 
     val metricsStatsd = ("com.github.jjagged" % "metrics-statsd" % METRICS_STATSD)
-      .excludeAll(ExclusionRule(organization = "com.codahale.metrics", artifact = "metrics-core" ))
+      .exclude("com.codahale.metrics", "metrics-core")
 
     val metricsDataDog = "org.coursera" % "metrics-datadog" % METRICS_DATADOG
   }
@@ -59,7 +58,7 @@ object Dependencies {
   import Dependencies.CompileDep._
   import Dependencies.TestDep._
 
-  val akka = Seq(akkaActor, akkaHttp, akkaHttpExp, akkaRemote, akkaSlf4j, akkaSSL, akkaStream)
+  val akka = Seq(akkaActor, akkaHttp, akkaHttpExp, akkaRemote, akkaSlf4j, akkaStream)
   val json = Seq(json4sJackson, json4sExt)
   val logging = Seq(logback, slf4j, slf4jOverLog4j)
   val metrics = Seq(metricsCore, metricsJvm)

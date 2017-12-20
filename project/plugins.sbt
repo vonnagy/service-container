@@ -1,7 +1,7 @@
 resolvers += "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 resolvers += Classpaths.sbtPluginReleases
 
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.13.0")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.6")
 
 // Add the pgp plugin
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
