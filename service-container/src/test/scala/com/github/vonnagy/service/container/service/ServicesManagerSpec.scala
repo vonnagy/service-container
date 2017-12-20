@@ -92,14 +92,6 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
       probe.expectMsgClass(classOf[Terminated]) must not beNull
     }
 
-    "be able to send the actor a shutdown message and have it terminate the entire system" in {
-      val cont = new ContainerService(Nil, Nil, Nil, name = "test")
-      val act = TestActorRef[ServicesManager](ServicesManager.props(cont, Nil, Nil), "service2")
-
-      probe.send(act, ShutdownService)
-      cont.started must beFalse.eventually(3, 500 milliseconds)
-    }
-
     "be able to find a registered service by name" in {
       val props = Seq("test_service" -> Props[TestService])
 
@@ -172,6 +164,17 @@ class ServicesManagerSpec extends AkkaTestkitSpecs2Support(ActorSystem("test", {
       val service = ServicesManager.findService("unknown_service", "test/user/service6")
       service.value.get must beAnInstanceOf[Failure[ServiceNotFound]].eventually
     }
+
+    "be able to send the actor a shutdown message and have it terminate the entire system" in {
+      val cont = spy(new ContainerService(Nil, Nil, Nil, name = "test"))
+      cont.started = true
+
+      val act2 = TestActorRef[ServicesManager](ServicesManager.props(cont, Nil, Nil), "service2")
+      probe.send(act2, ShutdownService(false))
+
+      cont.started must beFalse.eventually(3, 500 milliseconds)
+    }
+
   }
 }
 
