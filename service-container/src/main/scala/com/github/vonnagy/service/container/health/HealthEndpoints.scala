@@ -22,7 +22,7 @@ class HealthEndpoints(implicit val system: ActorSystem, val executor: ExecutionC
   lazy val config = system.settings.config.getConfig("container.http")
 
   val route = {
-    path("health") {
+    pathPrefix("health") {
       cidrFilter(immutableSeq(config.getStringList("cidr.allow")), immutableSeq(config.getStringList("cidr.deny"))) {
         get {
           pathEnd {
