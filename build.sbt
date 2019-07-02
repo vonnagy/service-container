@@ -1,5 +1,5 @@
 val CONTAINER_VERSION = "2.0.7"
-val SCALA_VERSION = "2.12.4"
+val SCALA_VERSION = "2.13.0"
 val JDK = "1.8"
 
 val buildNumber = sys.env.get("BUILD_NUMBER").getOrElse("000")
@@ -9,9 +9,11 @@ lazy val baseSettings = Seq(
   organization := "com.github.vonnagy",
   version := CONTAINER_VERSION,
   description := "Service Container",
-  crossScalaVersions := Seq("2.11.11", "2.12.2"),
+  crossScalaVersions := Seq("2.12.8", "2.13.0"),
   scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, scalaMajor)) if scalaMajor >= 13 =>
+        Seq("-Ywarn-unused:imports", "-Ywarn-unused:implicits")
       case Some((2, scalaMajor)) if scalaMajor >= 11 =>
         Seq("-Ywarn-unused-import", "-Ywarn-unused")
       case _ =>

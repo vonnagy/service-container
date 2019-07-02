@@ -7,7 +7,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import com.github.vonnagy.service.container.health.{GetHealth, HealthInfo, HealthState, RegisteredHealthCheckActor}
 import com.github.vonnagy.service.container.log.ActorLoggingAdapter
 import com.github.vonnagy.service.container.metrics.Metrics
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigObject}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
@@ -48,32 +48,35 @@ class MetricsReportingManager extends Actor with RegisteredHealthCheckActor with
    */
   private[reporting] def startReporters(): Unit = {
     try {
-      val master = context.system.settings.config.getConfig("container.metrics.reporters");
+      val master = context.system.settings.config.getConfig("container.metrics.reporters")
 
-      val definedReporters =
-        for {
-          entry <- master.root.entrySet.asScala
-          if (master.getConfig(entry.getKey).getBoolean("enabled"))
-        } yield {
-          val config = master.getConfig(entry.getKey)
-          val clazz = config.getString("class")
+      val definedReporters = master.root.asScala.flatMap {
+        case (_, configObject: ConfigObject) =>
+          val config = configObject.toConfig
 
-          metrics.system.dynamicAccess.createInstanceFor[ScheduledReporter](clazz,
-            List(classOf[ActorSystem] -> context.system, (classOf[Config] -> config))).map({
-            case reporter =>
-              reporter.start(FiniteDuration(config.getDuration("reporting-interval", TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS))
-              reporter
-          }).recover({
-            case e => throw new ConfigurationException(
-              "Metrics reporter specified in config can't be loaded [" + clazz +
-                "] due to [" + e.toString + "]", e)
-          }).get
-        }
+          if (config.getBoolean("enabled")) {
+            val clazz = config.getString("class")
+
+            metrics.system.dynamicAccess.createInstanceFor[ScheduledReporter](clazz,
+              List(classOf[ActorSystem] -> context.system, (classOf[Config] -> config))).map({
+              case reporter =>
+                reporter.start(FiniteDuration(config.getDuration("reporting-interval", TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS))
+                Some(reporter)
+            }).recover({
+              case e => throw new ConfigurationException(
+                "Metrics reporter specified in config can't be loaded [" + clazz +
+                  "] due to [" + e.toString + "]", e)
+            }).get
+          } else {
+            None
+          }
+        case _ => None
+      }
 
       reporters = definedReporters.toSeq
 
     } catch {
-      case e: Exception ⇒
+      case e: Exception =>
         System.err.println("Error while starting up metric reporters")
         e.printStackTrace()
         throw new ConfigurationException("Could not start reporters due to [" + e.toString + "]")

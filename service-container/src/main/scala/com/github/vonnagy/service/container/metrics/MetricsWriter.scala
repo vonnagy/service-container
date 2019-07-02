@@ -24,7 +24,7 @@ class MetricsWriter(registry: MetricRegistry) {
   private def getVmMetrics: JObject = {
 
     if (registry != null) {
-      val t = SortedMap(registry.getMetrics.asScala.filterKeys(n => n.startsWith("jvm.")).to: _*)
+      val t = SortedMap(registry.getMetrics.asScala.filter(n => n._1.startsWith("jvm.")).toSeq: _*)
 
       if (t.isEmpty) {
         JObject(Nil)
@@ -61,7 +61,7 @@ class MetricsWriter(registry: MetricRegistry) {
   private def getCustomMetrics(): JObject = {
 
     if (registry != null) {
-      val t = SortedMap(registry.getMetrics.asScala.filterKeys(n => !n.startsWith("jvm.")).to: _*)
+      val t = SortedMap(registry.getMetrics.asScala.filter(n => !n._1.startsWith("jvm.")).toSeq: _*)
 
       if (t.isEmpty) {
         JObject(Nil)
