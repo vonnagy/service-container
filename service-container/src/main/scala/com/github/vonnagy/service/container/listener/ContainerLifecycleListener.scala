@@ -8,7 +8,7 @@ import com.github.vonnagy.service.container.service.ContainerService
   * Created by alexsilva on 1/28/17.
   */
 trait ContainerLifecycleListener {
-  def onShutdown(container: ContainerService)
+  def onShutdown(container: ContainerService): Unit
 
-  def onStartup(container: ContainerService)
+  def onStartup(container: ContainerService): Unit
 }

@@ -87,7 +87,7 @@ trait HealthProvider extends LoggingAdapter {
     *
     * @param info
     */
-  private def checkStatuses(info: HealthInfo) {
+  private def checkStatuses(info: HealthInfo): Unit =  {
     def alert(state: HealthState): Boolean = {
       if (state == HealthState.CRITICAL || state == HealthState.DEGRADED) true else false
     }
