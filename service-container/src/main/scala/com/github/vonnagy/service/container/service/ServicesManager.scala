@@ -25,7 +25,7 @@ object ServicesManager {
     * @param name                The name of the service.
     * @param servicesManagerPath The service manager actor path in the system.
     *
-    *                            The result is returned as a Future that is completed with the [[ActorRef]]
+    *                            The result is returned as a Future that is completed with the [[akka.actor.ActorRef]]
     *                            if such a service exists. It is completed with failure [[ServiceNotFound]] if
     *                            no such service(actor) with that name exists
     *                            or if there is no service manager in the path specified.

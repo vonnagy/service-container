@@ -1,4 +1,4 @@
-val CONTAINER_VERSION = "2.0.7"
+val CONTAINER_VERSION = "2.1.0"
 val SCALA_VERSION = "2.13.0"
 val JDK = "1.8"
 
@@ -82,7 +82,7 @@ lazy val metricsReporting = (project in file("service-container-metrics-reportin
   .dependsOn(container % "test->test;compile->compile")
 
 lazy val examples = (project in file("service-container-examples"))
-  .settings(moduleSettings: _*)
+  .settings((defaultSettings ++ Publish.settings): _*)
   .settings(
     name := "service-container-examples",
     dependencyOverrides ++= Dependencies.overrrides,
