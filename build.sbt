@@ -82,7 +82,8 @@ lazy val metricsReporting = (project in file("service-container-metrics-reportin
   .dependsOn(container % "test->test;compile->compile")
 
 lazy val examples = (project in file("service-container-examples"))
-  .settings((defaultSettings ++ Publish.settings): _*)
+  .settings(defaultSettings: _*)
+  .settings(noPublishSettings: _*)
   .settings(
     name := "service-container-examples",
     dependencyOverrides ++= Dependencies.overrrides,
