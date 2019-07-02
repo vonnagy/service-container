@@ -1,7 +1,6 @@
 import sbt.Keys._
 import sbt._
 
-
 object Publish {
 
   lazy val settings = Seq[Def.Setting[_]](
@@ -68,8 +67,6 @@ object Publish {
           </developer>
         </developers>
       )
-
-
   )
 
 }

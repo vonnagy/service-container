@@ -25,15 +25,6 @@ lazy val baseSettings = Seq(
     Package.ManifestAttributes("Implementation-Build" -> buildNumber)
 )
 
-lazy val noPublishSettings = Seq(
-  publish := {},
-  publishLocal := {},
-  publishArtifact := false,
-  // required until these tickets are closed https://github.com/sbt/sbt-pgp/issues/42,
-  // https://github.com/sbt/sbt-pgp/issues/36
-  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
-)
-
 lazy val defaultSettings = baseSettings ++ Seq(
 
   logLevel := Level.Info,
@@ -48,19 +39,18 @@ lazy val defaultSettings = baseSettings ++ Seq(
   resolvers += "Scalaz Bintray Repo" at "https://dl.bintray.com/scalaz/releases",
 
   ivyLoggingLevel in ThisBuild := UpdateLogging.Quiet,
-  ivyScala := ivyScala.value map {
-    _.copy(overrideScalaVersion = true)
-  },
+  scalaModuleInfo := scalaModuleInfo.value.map(_.withOverrideScalaVersion(true)),
 
   parallelExecution in ThisBuild := false,
   parallelExecution in Global := false
+
 )
 
 lazy val moduleSettings = defaultSettings ++ Test.testSettings ++ Publish.settings
 
 lazy val root = (project in file("."))
   .settings(defaultSettings: _*)
-  .settings(noPublishSettings: _*)
+  .settings(skip in publish := true)
   .settings(name := "root")
   .aggregate(container, metricsReporting, examples)
 
@@ -83,7 +73,7 @@ lazy val metricsReporting = (project in file("service-container-metrics-reportin
 
 lazy val examples = (project in file("service-container-examples"))
   .settings(defaultSettings: _*)
-  .settings(noPublishSettings: _*)
+  .settings(skip in publish := true)
   .settings(
     name := "service-container-examples",
     dependencyOverrides ++= Dependencies.overrrides,

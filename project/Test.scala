@@ -1,6 +1,6 @@
+import org.scalastyle.sbt.ScalastylePlugin.autoImport
 import sbt.Keys._
 import sbt._
-
 
 object Test {
 
@@ -18,15 +18,13 @@ object Test {
     exportJars in sbt.Test := false,
 
     // Setup the system to run Scalastyle when running tests
-    testScalastyle := org.scalastyle.sbt.ScalastylePlugin.scalastyle.in(sbt.Test).toTask("").value,
+    testScalastyle := autoImport.scalastyle.in(sbt.Test).toTask("").value,
     (test in sbt.Test) := ((test in sbt.Test) dependsOn testScalastyle).value,
 
     // Include the code coverage settings
     coverageExcludedPackages := "<empty>;edazdarevic.*",
     coverageMinimum := 70,
     coverageFailOnMinimum := true,
-    coverageHighlighting := {
-      true
-    }
+    coverageHighlighting := { true }
   )
 }

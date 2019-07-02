@@ -62,5 +62,5 @@ object Dependencies {
   val reporting = test ++ Seq(metricsStatsd, metricsDataDog)
   val examples = Seq(akkaKafka)
 
-  val overrrides = Set(joda, metricsCore, slf4j) ++ akka
+  val overrrides = Seq(joda, metricsCore, slf4j) ++ akka
 }
